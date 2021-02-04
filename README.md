@@ -1,6 +1,13 @@
-# my-project
+# project-skeleton
 
 ---
+
+## Setup
+
+`npm install`
+`npm run dev`
+
+## About
 
 project features:
  - eslint
@@ -23,3 +30,9 @@ git hooks:
  - pre-commit:
    - *.json - format
    - *.ts,*.js - format and lint
+
+---
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE) for more information.
