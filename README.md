@@ -1,37 +1,41 @@
-# project-skeleton
+# package-skeleton
 
 ---
+
+{{package.description}}
 
 ## Setup
 
-`npm install`
-`npm run dev`
+```bash
+npm install
 
-## About
+npm run dev
+```
 
-project features:
- - eslint
- - prettier
- - typescript
- - jest
- - esbuild
- - husky v4
- - lint-staged
+## Testing
 
-npm scripts:
- - run tests
- - format all w/ prettier
- - lint all
- - lint and fix all
- - build (dev)
- - build & run (dev)
- 
-git hooks:
- - pre-commit:
-   - *.json - format
-   - *.ts,*.js - format and lint
+`package-skeleton` uses Jest for unit tests.  To run the test suite:
+
+`npm run test`
 
 ---
+
+## Changelog
+
+Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+
+## Contributing
+
+Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
+
+## Security Vulnerabilities
+
+Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+
+## Credits
+
+- [{{package.author.name}}](https://github.com/{{package.author.github}})
+- [All Contributors](../../contributors)
 
 ## License
 

@@ -10,12 +10,5 @@ module.exports = {
 
     coverageDirectory: './coverage',
     coverageReporters: ['html', 'text'],
-    collectCoverageFrom: [
-        'src/**/*.{ts,js}',
-        "!**/node_modules/**",
-        "!**/vendor/**",
-        '!**/dist/**',
-        '!**/tests/**',
-    ],
+    collectCoverageFrom: ['src/**/*.{ts,js}', '!**/node_modules/**', '!**/vendor/**', '!**/dist/**', '!**/tests/**'],
 };
-
