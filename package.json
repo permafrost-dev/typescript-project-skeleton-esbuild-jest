@@ -1,7 +1,7 @@
 {
   "name": "package-skeleton",
   "version": "1.0.0",
-  "description": "",
+  "description": "{{package.description}}",
   "main": "dist/index.js",
   "scripts": {
     "test": "./node_modules/.bin/jest tests --verbose",
@@ -13,7 +13,7 @@
     "build:dev": "./node_modules/.bin/esbuild --platform=node --target=node14 --define:__APP_VERSION__=\"'1.0'\" --format=cjs --outdir=dist src/index.ts",
     "dev": "npm run build:dev && node dist/index.js"
   },
-  "author": "",
+  "author": "{{package.author.name}} <{{package.author.email}}>",
   "license": "MIT",
   "husky": {
       "hooks": {
