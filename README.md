@@ -2,6 +2,8 @@
 
 ---
 
+Template Setup: run `node configure-package.js` to configure.
+
 {{package.description}}
 
 ## Setup

@@ -63,7 +63,8 @@ const replaceVariablesInFile = (filename, packageInfo) => {
         .replace(/\{\{package\.description\}\}/g, packageInfo.description)
         .replace(/\{\{package\.author\.name\}\}/g, packageInfo.author.name)
         .replace(/\{\{package\.author\.email\}\}/g, packageInfo.author.email)
-        .replace(/\{\{package\.author\.github\}\}/g, packageInfo.author.github);
+        .replace(/\{\{package\.author\.github\}\}/g, packageInfo.author.github)
+        .replace('Template Setup: run `node configure-package.js` to configure.\n', '');
 
     if (originalContent != content) {
         fs.writeFileSync(filename, content, { encoding: 'utf-8' });
