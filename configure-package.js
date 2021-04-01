@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const util = require('util');
+const cp = require('child_process');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -27,6 +28,10 @@ const packageInfo = {
         email: '',
         github: '',
     },
+};
+
+const installDependencies = () => {
+    cp.execSync('npm install', { cwd: __dirname, encoding: 'utf-8', stdio: 'inherit' });
 };
 
 const askQuestion = async prompt => {
@@ -144,6 +149,8 @@ const run = async function () {
 
     processFiles(__dirname, packageInfo);
     rl.close();
+
+    installDependencies();
 };
 
 run();
