@@ -1,42 +1,45 @@
 {
-  "name": "package-skeleton",
-  "version": "1.0.0",
-  "description": "{{package.description}}",
-  "main": "dist/index.js",
-  "scripts": {
-    "test": "./node_modules/.bin/jest tests --verbose",
-    "test:coverage": "./node_modules/.bin/jest tests --coverage",
-    "fmt": "./node_modules/.bin/prettier --config .prettierrc --write 'src/**/*.{js,ts,json}' 'tests/**/*.{js,ts,json}' './*.js'",
-    "lint": "./node_modules/.bin/eslint --ext ts,js src/",
-    "lint:fix": "./node_modules/.bin/eslint --ext ts,js --fix src/",
-    "lint:staged": "./node_modules/.bin/lint-staged",
-    "fix": "npm run fmt && npm run lint:fix",
-    "build:dev": "./node_modules/.bin/esbuild --platform=node --target=node14 --define:__APP_VERSION__=\"'1.0'\" --format=cjs --outdir=dist src/index.ts",
-    "dev": "npm run build:dev && node dist/index.js",
-    "prepare": "husky install"
-  },
-  "author": "{{package.author.name}} <{{package.author.email}}>",
-  "license": "MIT",
-  "lint-staged": {
-    "*.{js,ts}": [
-      "npm run fmt",
-      "npm run lint"
-    ]
-  },
-  "devDependencies": {
-    "@types/jest": "^26.0.20",
-    "@types/node": "^14.14.20",
-    "@typescript-eslint/eslint-plugin": "^4.9.1",
-    "@typescript-eslint/parser": "^4.9.1",
-    "esbuild": "^0.11.0",
-    "eslint": "^7.15.0",
-    "eslint-config-prettier": "^8.1.0",
-    "eslint-plugin-prettier": "^3.2.0",
-    "husky": "^6.0.0",
-    "jest": "^26.6.3",
-    "lint-staged": "^10.5.3",
-    "prettier": "^2.2.1",
-    "ts-jest": "^26.4.4",
-    "typescript": "^4.1.2"
-  }
+    "name": "package-skeleton",
+    "version": "1.0.0",
+    "description": "{{package.description}}",
+    "main": "dist/index.js",
+    "scripts": {
+        "test": "./node_modules/.bin/jest tests --verbose",
+        "test:coverage": "./node_modules/.bin/jest tests --coverage",
+        "fmt": "./node_modules/.bin/prettier --config .prettierrc --write 'src/**/*.{js,ts,json}' 'tests/**/*.{js,ts,json}' './*.js'",
+        "lint": "./node_modules/.bin/eslint --ext ts,js src/",
+        "lint:fix": "./node_modules/.bin/eslint --ext ts,js --fix src/",
+        "lint:staged": "./node_modules/.bin/lint-staged",
+        "fix": "npm run fmt && npm run lint:fix",
+        "build:dev": "./node_modules/.bin/esbuild --platform=node --target=node14 --define:__APP_VERSION__=\"'1.0'\" --format=cjs --outdir=dist src/index.ts",
+        "dev": "npm run build:dev && node dist/index.js",
+        "prepare": "husky install"
+    },
+    "author": "{{package.author.name}} <{{package.author.email}}>",
+    "license": "MIT",
+    "lint-staged": {
+        "*.{js,ts}": [
+            "npm run fmt",
+            "npm run lint"
+        ],
+        "*.{json,yaml,yml}": [
+            "npm run fmt"
+        ]
+    },
+    "devDependencies": {
+        "@types/jest": "^26.0.20",
+        "@types/node": "^14.14.20",
+        "@typescript-eslint/eslint-plugin": "^4.9.1",
+        "@typescript-eslint/parser": "^4.9.1",
+        "esbuild": "^0.11.0",
+        "eslint": "^7.15.0",
+        "eslint-config-prettier": "^8.1.0",
+        "eslint-plugin-prettier": "^3.2.0",
+        "husky": "^6.0.0",
+        "jest": "^26.6.3",
+        "lint-staged": "^10.5.3",
+        "prettier": "^2.2.1",
+        "ts-jest": "^26.4.4",
+        "typescript": "^4.1.2"
+    }
 }
