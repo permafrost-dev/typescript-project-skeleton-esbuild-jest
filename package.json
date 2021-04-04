@@ -20,7 +20,7 @@
     "lint-staged": {
         "*.{js,ts}": [
             "./node_modules/.bin/prettier --config .prettierrc --write",
-            "./node_modules/.bin/eslint --ext ts,js"
+            "./node_modules/.bin/eslint --ext ts,js --fix"
         ],
         "*.{json,yaml,yml}": [
             "./node_modules/.bin/prettier --config .prettierrc --write"
