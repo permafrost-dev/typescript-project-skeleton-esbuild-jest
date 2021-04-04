@@ -11,9 +11,9 @@
         "lint:fix": "./node_modules/.bin/eslint --ext ts,js --fix src/",
         "lint:staged": "./node_modules/.bin/lint-staged",
         "fix": "npm run fmt && npm run lint:fix",
-        "build:dev": "./node_modules/.bin/esbuild --platform=node --target=node14 --define:__APP_VERSION__=\"'1.0'\" --format=cjs --outdir=dist src/index.ts",
+        "build:dev": "./node_modules/.bin/esbuild --platform=node --target=node14 --define:__APP_VERSION__=\"'1.0'\" --format=cjs --bundle --outdir=dist src/index.ts",
         "dev": "npm run build:dev && node dist/index.js",
-        "prepare": "husky install"
+        "prepare": "[ -n \"$CI\" ] && husky install"
     },
     "author": "{{package.author.name}} <{{package.author.email}}>",
     "license": "MIT",
