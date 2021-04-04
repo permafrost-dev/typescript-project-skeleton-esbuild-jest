@@ -23,7 +23,7 @@
             "npm run lint"
         ],
         "*.{json,yaml,yml}": [
-            "npm run fmt"
+            "./node_modules/.bin/prettier --config .prettierrc --write"
         ]
     },
     "devDependencies": {
