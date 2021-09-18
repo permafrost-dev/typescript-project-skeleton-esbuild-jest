@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node-version: [12, 14]
+        node-version: [12, 14, 16]
 
     steps:
     - name: Checkout repository
@@ -28,7 +28,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Get yarn cache directory path
+    - name: Get npm cache directory path
       id: npm-cache-dir-path
       run: echo "::set-output name=dir::$(npm config get cache)"
 
