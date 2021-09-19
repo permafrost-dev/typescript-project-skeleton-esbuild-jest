@@ -1,0 +1,23 @@
+{
+	"detectiveOptions": {
+		"ts": {
+			"mixedImports": true
+		}
+	},
+	"graphVizOptions": {
+        "G": {            
+            "pad": 0.25,
+            "ranksep": 0.18,
+            "nodesep": 0.18,
+            "margin": 0.0,
+            "overlap": "scale",
+            "rankdir": "LR",
+            "splines": true,
+            "layout": "dot"
+        },
+        "E": {
+            "minlen": 2,
+            "constraint": true
+        }
+	}
+}
