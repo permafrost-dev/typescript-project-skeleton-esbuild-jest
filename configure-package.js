@@ -23,11 +23,18 @@ const basePath = __dirname;
 const packageInfo = {
     name: '',
     description: '',
+    vendor: {
+        name: '',
+    },
     author: {
         name: '',
         email: '',
         github: '',
     },
+};
+
+const runCommand = str => {
+    cp.execSync(str, { cwd: __dirname, encoding: 'utf-8', stdio: 'inherit' });
 };
 
 const installDependencies = () => {
@@ -64,11 +71,13 @@ const replaceVariablesInFile = (filename, packageInfo) => {
 
     content = content
         .replace(/package-skeleton/g, packageInfo.name)
+        .replace(/\{\{vendor\.name\}\}/g, packageInfo.vendor.name)
         .replace(/\{\{package\.name\}\}/g, packageInfo.name)
         .replace(/\{\{package\.description\}\}/g, packageInfo.description)
         .replace(/\{\{package\.author\.name\}\}/g, packageInfo.author.name)
         .replace(/\{\{package\.author\.email\}\}/g, packageInfo.author.email)
         .replace(/\{\{package\.author\.github\}\}/g, packageInfo.author.github)
+        .replace(/\{\{date\.year\}\}/g, new Date().getFullYear())
         .replace('Template Setup: run `node configure-package.js` to configure.\n', '');
 
     if (originalContent != content) {
@@ -111,12 +120,16 @@ const processFiles = (directory, packageInfo) => {
     });
 };
 
-const conditionalAsk = async (obj, propName, onlyEmpty, prompt) => {
+const conditionalAsk = async (obj, propName, onlyEmpty, prompt, allowEmpty = false) => {
     const value = obj[propName];
 
     if (!onlyEmpty || !value.length) {
         while (obj[propName].length === 0) {
             obj[propName] = await askQuestion(prompt);
+
+            if (allowEmpty && obj[propName].length === 0) {
+                break;
+            }
         }
     }
 
@@ -129,6 +142,11 @@ const populatePackageInfo = async (onlyEmpty = false) => {
     await conditionalAsk(packageInfo.author, 'name', onlyEmpty, 'author name?');
     await conditionalAsk(packageInfo.author, 'email', onlyEmpty, 'author email?');
     await conditionalAsk(packageInfo.author, 'github', onlyEmpty, 'author github username?');
+    await conditionalAsk(packageInfo.vendor, 'name', onlyEmpty, 'vendor name (default is author github name)?', true);
+
+    if (packageInfo.vendor.name.length === 0) {
+        packageInfo.vendor.name = packageInfo.author.github;
+    }
 };
 
 const run = async function () {
@@ -151,6 +169,12 @@ const run = async function () {
     rl.close();
 
     installDependencies();
+
+    console.log('Done, removing this script.');
+    fs.unlinkSync(__filename);
+
+    runCommand('git add .');
+    runCommand('git commit -m"commit configured package files"');
 };
 
 run();
