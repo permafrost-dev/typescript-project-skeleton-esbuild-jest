@@ -149,8 +149,57 @@ const populatePackageInfo = async (onlyEmpty = false) => {
     }
 };
 
+const processUseCodecovService = useService => {
+    if (useService) {
+        return true;
+    }
+
+    const testsWorkflowFn = `${__dirname}/.github/workflows/run-tests.yml`;
+    const contents = fs.readFileSync(testsWorkflowFn, { encoding: 'utf-8' });
+
+    fs.writeFileSync(testsWorkflowFn, contents.replace('USE_CODECOV_SERVICE: yes', 'USE_CODECOV_SERVICE: no'), { encoding: 'utf-8' });
+
+    fs.unlinkSync(`${__dirname}/.github/codecov.yml`);
+};
+
+const processUseDependabotAutomerge = useAutomerge => {
+    if (useAutomerge) {
+        return true;
+    }
+
+    fs.unlinkSync(`${__dirname}/.github/workflows/dependabot-auto-merge.yml`);
+};
+
+const processUseCodeQLAnalysis = useService => {
+    if (useService) {
+        return true;
+    }
+
+    fs.unlinkSync(`${__dirname}/.github/workflows/codeql-analysis.yml`);
+};
+
+const askBooleanQuestion = async str => {
+    const result = (await askQuestion('Process files (this will change content of some files!)? '))
+        .toString()
+        .toLowerCase()
+        .replace(/ /g, '')
+        .replace(/[^yesno]/g, '')
+        .slice(0, 1);
+
+    return result === 'y';
+};
+
 const run = async function () {
     await populatePackageInfo();
+
+    const useCodecovService = await askBooleanQuestion('Use the Codecov service for code coverage reporting?');
+    processUseCodecovService(useCodecovService);
+
+    const useDependabotAutomerge = await askBooleanQuestion('Enable auto-merging of Dependabot PRs for minor/patch version updates?');
+    processUseDependabotAutomerge(useDependabotAutomerge);
+
+    const useCodeQLAnalysis = await askBooleanQuestion('Use the GitHub CodeQL analysis service?');
+    processUseCodeQLAnalysis(useCodeQLAnalysis);
 
     const confirm = (await askQuestion('Process files (this will change content of some files!)? '))
         .toString()
