@@ -1,5 +1,4 @@
-node_modules/*
-dist/*
 build/*
-*.yml
-*.yaml
+coverage/*
+dist/*
+node_modules/*

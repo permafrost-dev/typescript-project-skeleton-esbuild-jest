@@ -1,7 +1,10 @@
-/node_modules
+/.idea
+/.vscode
 /build
-/tempdir
+/coverage
 /dist
+/node_modules
+/tempdir
 package-lock.json
 yarn.lock
 .env

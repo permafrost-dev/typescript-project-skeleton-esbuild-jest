@@ -10,12 +10,7 @@ module.exports = {
         commonjs: true,
     },
     settings: {},
-    extends: [
-        'plugin:@typescript-eslint/recommended',
-        'eslint:recommended',
-        // 'prettier',
-        // 'plugin:prettier/recommended',
-    ],
+    extends: ['plugin:@typescript-eslint/recommended', 'eslint:recommended'],
     rules: {
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
