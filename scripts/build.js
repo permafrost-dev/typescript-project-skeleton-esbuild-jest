@@ -1,7 +1,9 @@
 // @ts-nocheck
 
-const { realpathSync } = require('fs');
+const { realpathSync, readFileSync, writeFileSync, renameSync } = require('fs');
 const esbuild = require('esbuild');
+const { basename } = require('path');
+const { spawnSync } = require('child_process');
 
 const buildConfig = {
     basePath: `${__dirname}/..`,
@@ -20,6 +22,7 @@ const buildConfig = {
 class Builder {
     config = {
         verbose: false,
+        production: false,
     };
 
     write(msg) {
@@ -70,6 +73,10 @@ class Builder {
         const argMap = {
             '-v': { name: 'verbose', value: true },
             '--verbose': { name: 'verbose', value: true },
+
+            '-p': { name: 'production', value: true },
+            '--prod': { name: 'production', value: true },
+            '--production': { name: 'production', value: true },
         };
 
         process.argv
@@ -79,6 +86,18 @@ class Builder {
                 return hasMappedArg ? { name: arg.replace(/^-+/, ''), value: true } : argMap[arg];
             })
             .forEach(data => (this.config[data.name] = data.value));
+    }
+
+    convertToProductionFile() {
+        const filename = basename(buildConfig.entry).replace(/\.ts$/, '.js');
+        const newFilename = require(realpathSync(`${buildConfig.basePath}/package.json`, { encoding: 'utf-8' })).name;
+
+        spawnSync('chmod', ['+x', `${buildConfig.outdir}/${filename}`], { stdio: 'ignore' });
+
+        const contents = readFileSync(`${buildConfig.outdir}/${filename}`, { encoding: 'utf-8' });
+
+        writeFileSync(`${buildConfig.outdir}/${filename}`, `#!/usr/bin/node\n\n${contents}`, { encoding: 'utf-8' });
+        renameSync(`${buildConfig.outdir}/${filename}`, `${buildConfig.outdir}/${newFilename}`);
     }
 
     async run() {
@@ -99,6 +118,10 @@ class Builder {
         }
 
         this.writeln((this.config.verbose ? `* D` : `d`) + `one. (${finishedTs - startedTs} ms)`);
+
+        if (this.config.production) {
+            this.convertToProductionFile();
+        }
     }
 }
 

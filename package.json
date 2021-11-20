@@ -15,6 +15,7 @@
         "lint:staged": "./node_modules/.bin/lint-staged",
         "fix": "npm run fmt && npm run lint:fix",
         "build:dev": "./node_modules/.bin/esbuild --platform=node --target=node16 --define:__APP_VERSION__=\"'1.0'\" --format=cjs --bundle --outdir=dist src/index.ts",
+        "build:prod": "node ./scripts/build.js --production",
         "dev": "npm run build:dev && node dist/index.js",
         "prepare": "husky install"
     },
