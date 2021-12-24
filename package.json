@@ -9,7 +9,7 @@
         "analyze:deps:graph": "node_modules/.bin/madge --extensions js,ts --image graph.svg --layout dot --ts-config ./tsconfig.json src/**",
         "test": "./node_modules/.bin/jest tests --verbose",
         "test:coverage": "./node_modules/.bin/jest tests --coverage",
-        "fmt": "./node_modules/.bin/prettier --config .prettierrc --write 'src/**/*.{js,ts,json,yml,yaml}' 'tests/**/*.{js,ts,json,yml,yaml}' './*.{js,yml,yaml}'",
+        "fmt": "./node_modules/.bin/prettier --config prettier.config.js --write 'src/**/*.{js,ts,json,yml,yaml}' 'tests/**/*.{js,ts,json,yml,yaml}' './*.{js,yml,yaml,json}'",
         "lint": "./node_modules/.bin/eslint --ext ts,js src/",
         "lint:fix": "./node_modules/.bin/eslint --ext ts,js --fix src/",
         "lint:staged": "./node_modules/.bin/lint-staged",
@@ -23,14 +23,14 @@
     "license": "MIT",
     "lint-staged": {
         "*.{js,ts}": [
-            "./node_modules/.bin/prettier --config .prettierrc --write",
-            "./node_modules/.bin/eslint --ext ts,js --fix"
+            "./node_modules/.bin/prettier --config prettier.config.js --write",
+            "./node_modules/.bin/eslint --fix"
         ],
-        "*.json": [
-            "./node_modules/.bin/prettier --config .prettierrc --write"
+        "*.{json,css,scss,gql}": [
+            "./node_modules/.bin/prettier --config prettier.config.js --write"
         ],
         "*.{yaml,yml}": [
-            "./node_modules/.bin/prettier --config .prettierrc --tab-width 2 --write"
+            "./node_modules/.bin/prettier --config prettier.config.js --tab-width 2 --write"
         ]
     },
     "devDependencies": {
