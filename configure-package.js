@@ -205,6 +205,203 @@ const populatePackageInfo = async (onlyEmpty = false) => {
     }
 };
 
+const safeUnlink = path => fs.existsSync(path) && fs.unlinkSync(path);
+const getWorkflowFilename = name => `${__dirname}/.github/workflows/${name}.yml`;
+const getGithubConfigFilename = name => `${__dirname}/.github/${name}.yml`;
+
+class Features {
+    codecov = {
+        prompt: 'Use code coverage service codecov?',
+        enabled: true,
+        dependsOn: [],
+        disable: () => {
+            const testsWorkflowFn = getWorkflowFilename('run-tests');
+            const contents = fs.readFileSync(testsWorkflowFn, { encoding: 'utf-8' });
+
+            fs.writeFileSync(testsWorkflowFn, contents.replace('USE_CODECOV_SERVICE: yes', 'USE_CODECOV_SERVICE: no'), {
+                encoding: 'utf-8',
+            });
+            safeUnlink(getGithubConfigFilename('codecov'));
+        },
+    };
+
+    dependabot = {
+        prompt: 'Use Dependabot?',
+        enabled: true,
+        dependsOn: [],
+        disable: () => {
+            safeUnlink(getGithubConfigFilename('dependabot'));
+            this.automerge.disable();
+        },
+    };
+
+    automerge = {
+        prompt: 'Automerge Dependabot PRs?',
+        enabled: true,
+        dependsOn: ['dependabot'],
+        disable: () => {
+            safeUnlink(getWorkflowFilename('dependabot-auto-merge'));
+        },
+    };
+
+    codeql = {
+        prompt: 'Use CodeQL Quality Analysis?',
+        enabled: true,
+        dependsOn: [],
+        disable: () => {
+            safeUnlink(getWorkflowFilename('codeql-analysis'));
+        },
+    };
+
+    updateChangelog = {
+        prompt: 'Use Changelog Updater Workflow?',
+        enabled: true,
+        dependsOn: [],
+        disable: () => {
+            safeUnlink(getWorkflowFilename('update-changelog'));
+        },
+    };
+
+    features = [this.codecov, this.dependabot, this.automerge, this.codeql, this.updateChangelog];
+
+    async run() {
+        for (let feature of this.features) {
+            if (feature.enabled) {
+                feature.enabled = await askBooleanQuestion(feature.prompt, feature.default);
+            }
+
+            if (!feature.enabled) {
+                feature.disable();
+            }
+        }
+    }
+}
+
+function dedent(templ, ...values) {
+    let strings = Array.from(typeof templ === 'string' ? [templ] : templ);
+    strings[strings.length - 1] = strings[strings.length - 1].replace(/\r?\n([\t ]*)$/, '');
+    const indentLengths = strings.reduce((arr, str) => {
+        const matches = str.match(/\n([\t ]+|(?!\s).)/g);
+        if (matches) {
+            return arr.concat(
+                matches.map(match => {
+                    var _a;
+                    return ((_a = match.match(/[\t ]/g)) == null ? void 0 : _a.length) ?? 0;
+                }),
+            );
+        }
+        return arr;
+    }, []);
+    if (indentLengths.length) {
+        const pattern = new RegExp(`[	 ]{${Math.min(...indentLengths)}}`, 'g');
+        strings = strings.map(str => str.replace(pattern, '\n'));
+    }
+    strings[0] = strings[0].replace(/^\r?\n/, '');
+    let string = strings[0];
+    values.forEach((value, i) => {
+        const endentations = string.match(/(?:^|\n)( *)$/);
+        const endentation = endentations ? endentations[1] : '';
+        let indentedValue = value;
+        if (typeof value === 'string' && value.includes('\n')) {
+            indentedValue = String(value)
+                .split('\n')
+                .map((str, i2) => (i2 === 0 ? str : `${endentation}${str}`))
+                .join('\n');
+        }
+        string += indentedValue + strings[i + 1];
+    });
+    return string;
+}
+
+class OptionalPackages {
+    config = {
+        prompt: 'Use a yaml config file?',
+        enabled: true,
+        default: false,
+        dependsOn: [],
+        name: 'conf',
+        add: () => {
+            cp.execSync('npm install conf js-yaml', { cwd: __dirname, stdio: 'inherit' });
+            fs.writeFileSync(`${__dirname}/config.yaml`, '', { encoding: 'utf-8' });
+
+            fs.writeFileSync(
+                `${__dirname}/src/config.ts`,
+                `
+                import Conf from 'conf';
+                import yaml from 'js-yaml';
+
+                const ConfBaseConfig = {
+                    cwd: __dirname,
+                    deserialize: (text: string) => yaml.load(text),
+                    serialize: value => yaml.dump(value, { indent: 2 }),
+                    fileExtension: 'yml',
+                };
+
+                export function createConf(name: string, options: Record<string, any> = {}): Conf {
+                    return new Conf(<any>{
+                        configName: name,
+                        ...Object.assign({}, ConfBaseConfig, options),
+                    });
+                }
+            `.trim(),
+                { encoding: 'utf-8' },
+            );
+        },
+    };
+
+    dotenv = {
+        prompt: 'Use a .env file?',
+        enabled: true,
+        default: false,
+        dependsOn: [],
+        name: 'dotenv',
+        add: () => {
+            runCommand('npm', ['install', 'dotenv'], { cwd: __dirname, stdio: 'inherit' });
+
+            fs.mkdirSync(`${__dirname}/dist`, { recursive: true });
+            fs.writeFileSync(`${__dirname}/dist/.env`, 'TEST_VALUE=1\n', { encoding: 'utf-8' });
+            fs.writeFileSync(
+                `${__dirname}/src/init.ts`,
+                `
+                require('dotenv').config({ path: \`\${__dirname}/.env' })
+            `.trim(),
+                { encoding: 'utf-8' },
+            );
+        },
+    };
+
+    otherPackages = {
+        prompt: 'Comma-separated list of packages to install:',
+        enabled: true,
+        default: '',
+        dependsOn: [],
+        name: 'otherPackages',
+        add: values => {
+            cp.execSync('npm install ' + values.join(' '), { cwd: __dirname, stdio: 'inherit' });
+        },
+    };
+
+    optionalPackages = [this.config, this.dotenv];
+
+    async run() {
+        for (let pkg of this.optionalPackages) {
+            const result = await askBooleanQuestion(pkg.prompt, pkg.default);
+            if (result) {
+                pkg.add();
+            }
+        }
+
+        const packageList = await askQuestion(this.otherPackages, this.otherPackages.default);
+
+        if (packageList.length > 0) {
+            this.otherPackages.add(packageList.split(',').map(pkg => pkg.trim()));
+        }
+
+        cp.execSync('node ./node_modules/.bin/prettier --write ./src', { cwd: __dirname, stdio: 'inherit' });
+        cp.execSync('node ./node_modules/.bin/eslint --fix ./src', { cwd: __dirname, stdio: 'inherit' });
+    }
+}
+
 const processUseCodecovService = useService => {
     if (useService) {
         return true;
@@ -218,12 +415,23 @@ const processUseCodecovService = useService => {
     fs.unlinkSync(`${__dirname}/.github/codecov.yml`);
 };
 
+const processUseDependabot = enabled => {
+    if (enabled) {
+        return true;
+    }
+
+    fs.unlinkSync(`${__dirname}/.github/dependabot.yml`);
+    processUseDependabotAutomerge(false);
+};
+
 const processUseDependabotAutomerge = useAutomerge => {
     if (useAutomerge) {
         return true;
     }
 
-    fs.unlinkSync(`${__dirname}/.github/workflows/dependabot-auto-merge.yml`);
+    if (fs.existsSync(`${__dirname}/.github/dependabot-auto-merge.yml`)) {
+        fs.unlinkSync(`${__dirname}/.github/workflows/dependabot-auto-merge.yml`);
+    }
 };
 
 const processUseCodeQLAnalysis = useService => {
@@ -234,13 +442,28 @@ const processUseCodeQLAnalysis = useService => {
     fs.unlinkSync(`${__dirname}/.github/workflows/codeql-analysis.yml`);
 };
 
+async function configureOptionalFeatures() {
+    await new Features().run();
+    // const useCodecovService = await askBooleanQuestion('Use the Codecov service for code coverage reporting?');
+    // processUseCodecovService(useCodecovService);
+
+    // const useDependabot = await askBooleanQuestion('Enable Dependabot?');
+    // processUseDependabot(useDependabot);
+
+    // if (useDependabot) {
+    //     const useDependabotAutomerge = await askBooleanQuestion('Enable auto-merging of Dependabot PRs for minor/patch version updates?');
+    //     processUseDependabotAutomerge(useDependabotAutomerge);
+    // }
+
+    // const useCodeQLAnalysis = await askBooleanQuestion('Use the GitHub CodeQL analysis service?');
+    // processUseCodeQLAnalysis(useCodeQLAnalysis);
+}
+
 const askBooleanQuestion = async str => {
     const resultStr = await askQuestion(`${str} `);
-    const result = resultStr
-        .toString()
-        .toLowerCase()
+    const result = resultStr.toString().toLowerCase()
         .replace(/ /g, '')
-        .replace(/[^yesno]/g, '')
+        .replace(/[^yn]/g, '')
         .slice(0, 1);
 
     return result === 'y';
@@ -248,21 +471,13 @@ const askBooleanQuestion = async str => {
 
 const run = async function () {
     await populatePackageInfo();
+    await configureOptionalFeatures();
 
-    const useCodecovService = await askBooleanQuestion('Use the Codecov service for code coverage reporting?');
-    processUseCodecovService(useCodecovService);
-
-    const useDependabotAutomerge = await askBooleanQuestion('Enable auto-merging of Dependabot PRs for minor/patch version updates?');
-    processUseDependabotAutomerge(useDependabotAutomerge);
-
-    const useCodeQLAnalysis = await askBooleanQuestion('Use the GitHub CodeQL analysis service?');
-    processUseCodeQLAnalysis(useCodeQLAnalysis);
-
-    const confirm = (await askQuestion('Process files (this will change content of some files!)? '))
+    const confirm = (await askQuestion('Process files (this will modify files)? '))
         .toString()
         .toLowerCase()
         .replace(/ /g, '')
-        .replace(/[^yesno]/g, '')
+        .replace(/[^yn]/g, '')
         .slice(0, 1);
 
     if (confirm !== 'y') {
@@ -271,13 +486,18 @@ const run = async function () {
         return;
     }
 
-    processFiles(__dirname, packageInfo);
+    try {
+        processFiles(__dirname, packageInfo);
+        installDependencies();
+        await new OptionalPackages().run();
+    } catch (err) {
+        //
+    }
+
     rl.close();
 
-    installDependencies();
-
     console.log('Done, removing this script.');
-    fs.unlinkSync(__filename);
+    //fs.unlinkSync(__filename);
 
     runCommand('git add .');
     runCommand('git commit -m"commit configured package files"');
