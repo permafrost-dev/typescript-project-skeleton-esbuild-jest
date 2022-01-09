@@ -175,7 +175,9 @@ const conditionalAsk = async (obj, propName, onlyEmpty, prompt, allowEmpty = fal
 };
 
 const populatePackageInfo = async (onlyEmpty = false) => {
-    const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
+    const remoteUrlParts = gitCommand('config remote.origin.url').trim()
+        .replace(':', '/')
+        .split('/');
 
     console.log();
 
@@ -459,7 +461,10 @@ async function configureOptionalFeatures() {
 
 const askBooleanQuestion = async str => {
     const resultStr = await askQuestion(`${str} `);
-    const result = resultStr.toString().toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
+    const result = resultStr.toString().toLowerCase()
+        .replace(/ /g, '')
+        .replace(/[^yn]/g, '')
+        .slice(0, 1);
 
     return result === 'y';
 };
@@ -492,7 +497,7 @@ const run = async function () {
     rl.close();
 
     console.log('Done, removing this script.');
-    //fs.unlinkSync(__filename);
+    fs.unlinkSync(__filename);
 
     runCommand('git add .');
     runCommand('git commit -m"commit configured package files"');
