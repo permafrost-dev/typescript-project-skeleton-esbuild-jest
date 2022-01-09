@@ -8,7 +8,7 @@ const overrides = [
     {
         files: 'tsconfig.json',
         options: {
-            parser: 'json5',
+            parser: 'json',
         },
     },
     {
