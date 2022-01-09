@@ -175,9 +175,7 @@ const conditionalAsk = async (obj, propName, onlyEmpty, prompt, allowEmpty = fal
 };
 
 const populatePackageInfo = async (onlyEmpty = false) => {
-    const remoteUrlParts = gitCommand('config remote.origin.url').trim()
-        .replace(':', '/')
-        .split('/');
+    const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
 
     console.log();
 
