@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+
 import { add } from '../src/index';
 
 test('two plus two is four', () => {
