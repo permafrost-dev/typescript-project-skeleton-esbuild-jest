@@ -175,7 +175,9 @@ const conditionalAsk = async (obj, propName, onlyEmpty, prompt, allowEmpty = fal
 };
 
 const populatePackageInfo = async (onlyEmpty = false) => {
-    const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
+    const remoteUrlParts = gitCommand('config remote.origin.url').trim()
+        .replace(':', '/')
+        .split('/');
 
     console.log();
 
@@ -260,7 +262,25 @@ class Features {
         },
     };
 
-    features = [this.codecov, this.dependabot, this.automerge, this.codeql, this.updateChangelog];
+    useMadgePackage = {
+        prompt: 'Use madge package for code analysis?',
+        enabled: true,
+        dependsOn: [],
+        disable: () => {
+            runCommand('npm rm madge');
+            safeUnlink(`${__dirname}/.madgerc`);
+
+            const package = require(`${__dirname}/package.json`);
+
+            delete package.scripts['analyze:deps:circular'];
+            delete package.scripts['analyze:deps:list'];
+            delete package.scripts['analyze:deps:graph'];
+
+            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(package, null, 4), { encoding: 'utf-8' });
+        },
+    };
+
+    features = [this.codecov, this.dependabot, this.automerge, this.codeql, this.updateChangelog, this.useMadgePackage];
 
     async run() {
         for (let feature of this.features) {
@@ -400,66 +420,16 @@ class OptionalPackages {
     }
 }
 
-const processUseCodecovService = useService => {
-    if (useService) {
-        return true;
-    }
-
-    const testsWorkflowFn = `${__dirname}/.github/workflows/run-tests.yml`;
-    const contents = fs.readFileSync(testsWorkflowFn, { encoding: 'utf-8' });
-
-    fs.writeFileSync(testsWorkflowFn, contents.replace('USE_CODECOV_SERVICE: yes', 'USE_CODECOV_SERVICE: no'), { encoding: 'utf-8' });
-
-    fs.unlinkSync(`${__dirname}/.github/codecov.yml`);
-};
-
-const processUseDependabot = enabled => {
-    if (enabled) {
-        return true;
-    }
-
-    fs.unlinkSync(`${__dirname}/.github/dependabot.yml`);
-    processUseDependabotAutomerge(false);
-};
-
-const processUseDependabotAutomerge = useAutomerge => {
-    if (useAutomerge) {
-        return true;
-    }
-
-    if (fs.existsSync(`${__dirname}/.github/dependabot-auto-merge.yml`)) {
-        fs.unlinkSync(`${__dirname}/.github/workflows/dependabot-auto-merge.yml`);
-    }
-};
-
-const processUseCodeQLAnalysis = useService => {
-    if (useService) {
-        return true;
-    }
-
-    fs.unlinkSync(`${__dirname}/.github/workflows/codeql-analysis.yml`);
-};
-
 async function configureOptionalFeatures() {
     await new Features().run();
-    // const useCodecovService = await askBooleanQuestion('Use the Codecov service for code coverage reporting?');
-    // processUseCodecovService(useCodecovService);
-
-    // const useDependabot = await askBooleanQuestion('Enable Dependabot?');
-    // processUseDependabot(useDependabot);
-
-    // if (useDependabot) {
-    //     const useDependabotAutomerge = await askBooleanQuestion('Enable auto-merging of Dependabot PRs for minor/patch version updates?');
-    //     processUseDependabotAutomerge(useDependabotAutomerge);
-    // }
-
-    // const useCodeQLAnalysis = await askBooleanQuestion('Use the GitHub CodeQL analysis service?');
-    // processUseCodeQLAnalysis(useCodeQLAnalysis);
 }
 
 const askBooleanQuestion = async str => {
     const resultStr = await askQuestion(`${str} `);
-    const result = resultStr.toString().toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
+    const result = resultStr.toString().toLowerCase()
+        .replace(/ /g, '')
+        .replace(/[^yn]/g, '')
+        .slice(0, 1);
 
     return result === 'y';
 };
