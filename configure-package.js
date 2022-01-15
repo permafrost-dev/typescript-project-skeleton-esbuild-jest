@@ -175,7 +175,9 @@ const conditionalAsk = async (obj, propName, onlyEmpty, prompt, allowEmpty = fal
 };
 
 const populatePackageInfo = async (onlyEmpty = false) => {
-    const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
+    const remoteUrlParts = gitCommand('config remote.origin.url').trim()
+        .replace(':', '/')
+        .split('/');
 
     console.log();
 
@@ -268,13 +270,13 @@ class Features {
             runCommand('npm rm madge');
             safeUnlink(`${__dirname}/.madgerc`);
 
-            const package = require(`${__dirname}/package.json`);
+            const pkg = require(`${__dirname}/package.json`);
 
-            delete package.scripts['analyze:deps:circular'];
-            delete package.scripts['analyze:deps:list'];
-            delete package.scripts['analyze:deps:graph'];
+            delete pkg.scripts['analyze:deps:circular'];
+            delete pkg.scripts['analyze:deps:list'];
+            delete pkg.scripts['analyze:deps:graph'];
 
-            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(package, null, 4), { encoding: 'utf-8' });
+            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
         },
     };
 
@@ -424,7 +426,10 @@ async function configureOptionalFeatures() {
 
 const askBooleanQuestion = async str => {
     const resultStr = await askQuestion(`${str} `);
-    const result = resultStr.toString().toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
+    const result = resultStr.toString().toLowerCase()
+        .replace(/ /g, '')
+        .replace(/[^yn]/g, '')
+        .slice(0, 1);
 
     return result === 'y';
 };
