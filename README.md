@@ -2,8 +2,22 @@
 
 ---
 
-Template Setup: run `node configure-package.js` to configure.
+<!-- ==START TEMPLATE README== -->
+## Description
 
+This is a starter template for NodeJS projects using the latest versions of TypeScript, ESBuild, ESLint, Prettier, and Jest.
+
+## Template Setup
+
+To configure, run:
+
+```bash
+node configure-package.js
+```
+
+This will ask you a series of questions that will customize the template with values such as your name, github username, email address, use of optional packages, and more.  Some of the default values are automatically determined based on your git configuration, but you may change any of the values when prompted.
+
+<!-- ==END TEMPLATE README== -->
 {{package.description}}
 
 ## Setup

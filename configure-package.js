@@ -175,7 +175,9 @@ const conditionalAsk = async (obj, propName, onlyEmpty, prompt, allowEmpty = fal
 };
 
 const populatePackageInfo = async (onlyEmpty = false) => {
-    const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
+    const remoteUrlParts = gitCommand('config remote.origin.url').trim()
+        .replace(':', '/')
+        .split('/');
 
     console.log();
 
@@ -329,6 +331,24 @@ function dedent(templ, ...values) {
     return string;
 }
 
+function removeTemplateReadmeText() {
+    const END_BLOCK_STR = '<!-- ==END TEMPLATE README== -->';
+    const START_BLOCK_STR = '<!-- ==START TEMPLATE README== -->';
+
+    const content = fs.readFileSync(`${__dirname}/README.md`).toString();
+
+    if (content.includes(START_BLOCK_STR) && content.includes(END_BLOCK_STR)) {
+        const startBlockPos = content.indexOf(START_BLOCK_STR);
+        const endBlockPos = content.lastIndexOf(END_BLOCK_STR);
+
+        const newContent = content.replace(content.substring(startBlockPos, endBlockPos + END_BLOCK_STR.length), '');
+
+        if (newContent.length) {
+            fs.writeFileSync('./README.md', newContent);
+        }
+    }
+}
+
 class OptionalPackages {
     config = {
         prompt: 'Use a yaml config file?',
@@ -424,7 +444,10 @@ async function configureOptionalFeatures() {
 
 const askBooleanQuestion = async str => {
     const resultStr = await askQuestion(`${str} `);
-    const result = resultStr.toString().toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
+    const result = resultStr.toString().toLowerCase()
+        .replace(/ /g, '')
+        .replace(/[^yn]/g, '')
+        .slice(0, 1);
 
     return result === 'y';
 };
@@ -447,6 +470,7 @@ const run = async function () {
     }
 
     try {
+        removeTemplateReadmeText();
         processFiles(__dirname, packageInfo);
         installDependencies();
         await new OptionalPackages().run();
