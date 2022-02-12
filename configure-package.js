@@ -175,7 +175,9 @@ const conditionalAsk = async (obj, propName, onlyEmpty, prompt, allowEmpty = fal
 };
 
 const populatePackageInfo = async (onlyEmpty = false) => {
-    const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
+    const remoteUrlParts = gitCommand('config remote.origin.url').trim()
+        .replace(':', '/')
+        .split('/');
 
     console.log();
 
@@ -347,6 +349,18 @@ function removeTemplateReadmeText() {
     }
 }
 
+function removeAssetsDirectory() {
+    try {
+        for (const fn of fs.readdirSync(`${__dirname}/assets`)) {
+            fs.unlinkSync(`${__dirname}/assets/${fn}`);
+        }
+
+        fs.rmdirSync(`${__dirname}/assets`);
+    } catch (e) {
+        //
+    }
+}
+
 class OptionalPackages {
     config = {
         prompt: 'Use a yaml config file?',
@@ -442,7 +456,10 @@ async function configureOptionalFeatures() {
 
 const askBooleanQuestion = async str => {
     const resultStr = await askQuestion(`${str} `);
-    const result = resultStr.toString().toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
+    const result = resultStr.toString().toLowerCase()
+        .replace(/ /g, '')
+        .replace(/[^yn]/g, '')
+        .slice(0, 1);
 
     return result === 'y';
 };
@@ -466,6 +483,7 @@ const run = async function () {
 
     try {
         removeTemplateReadmeText();
+        removeAssetsDirectory();
         processFiles(__dirname, packageInfo);
         installDependencies();
         await new OptionalPackages().run();
