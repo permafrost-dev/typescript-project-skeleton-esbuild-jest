@@ -3,6 +3,11 @@
 ---
 
 <!-- ==START TEMPLATE README== -->
+
+<p align="center">
+    <img style="width: 80%;" src="assets/social-card.png" alt="template logo" />
+</p>
+
 ## Description
 
 This is a starter template for NodeJS projects using the latest versions of TypeScript, ESBuild, ESLint, Prettier, and Jest.
