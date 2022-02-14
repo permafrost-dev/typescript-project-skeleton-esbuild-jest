@@ -1,0 +1,32 @@
+name: npm-package-updater
+
+on:
+  schedule:
+    - cron: '20 * * * *'
+    - cron: '45 * * * *'
+
+jobs:
+  format-code:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Set up NodeJS 16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - name: Run version npm-package-updater
+        run: npx npm-check-updates -t minor -u
+
+#      - name: Create pull request
+#        run: gh pr create --head "${{ github.head_ref }}" --base "main" --title "[updates] npm dependency updates" --body "This PR updates minor versions for all npm dependencies."
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: bump dependency versions
