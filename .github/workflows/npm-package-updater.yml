@@ -24,10 +24,10 @@ jobs:
       - name: Run version npm-package-updater
         run: npx npm-check-updates -t minor -u
 
-#      - name: Create pull request
-#        run: gh pr create --head "${{ github.head_ref }}" --base "main" --title "[updates] npm dependency updates" --body "This PR updates minor versions for all npm dependencies."
+      - name: Create pull request
+        run: gh pr create --head "${{ github.head_ref }}" --base "main" --title "[updates] npm dependency updates" --body "This PR updates minor versions for all npm dependencies."
 
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: bump dependency versions
+#      - name: Commit changes
+#        uses: stefanzweifel/git-auto-commit-action@v4
+#        with:
+#          commit_message: bump dependency versions
