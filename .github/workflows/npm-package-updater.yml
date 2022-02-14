@@ -23,6 +23,9 @@ jobs:
 
       - name: Run version npm-package-updater
         run: npx npm-check-updates -t minor -u
+        
+      - name: configure git
+        run: git config --global user.email "dep-update-bot@permafrost.dev" && git config --global user.name "Dependency Update Bot"
 
       - name: commit changes
         run: git checkout -b dep-updates && git add package.json && git commit -m'dependency updates' && git push origin dep-updates
