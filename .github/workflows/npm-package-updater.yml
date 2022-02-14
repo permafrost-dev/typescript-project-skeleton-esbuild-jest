@@ -31,7 +31,7 @@ jobs:
         run: git checkout -b dep-updates && git add package.json && git commit -m'dependency updates' && git push origin dep-updates
         
       - name: Create pull request
-        run: GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} gh pr create --head "main" --base "dep-updates" --title "[updates] npm dependency updates" --body "This PR updates minor versions for all npm dependencies."
+        run: GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} gh pr create --head "dep-updates" --base "main" --title "[updates] npm dependency updates" --body "This PR updates minor versions for all npm dependencies."
         
 #      - name: Commit changes
 #        uses: stefanzweifel/git-auto-commit-action@v4
