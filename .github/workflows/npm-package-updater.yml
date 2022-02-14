@@ -25,7 +25,7 @@ jobs:
         run: npx npm-check-updates -t minor -u
 
       - name: Create pull request
-        run: GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} gh pr create --head "${{ github.head_ref }}" --base "main" --title "[updates] npm dependency updates" --body "This PR updates minor versions for all npm dependencies."
+        run: GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} gh pr create --base "dep-updates" --title "[updates] npm dependency updates" --body "This PR updates minor versions for all npm dependencies."
         
         
 #      - name: Commit changes
