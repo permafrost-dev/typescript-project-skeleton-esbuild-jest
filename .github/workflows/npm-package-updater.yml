@@ -1,6 +1,7 @@
 name: npm-package-updater
 
 on:
+  push:
   schedule:
     - cron: '20 * * * *'
     - cron: '*/10 * * * *'
