@@ -93,7 +93,7 @@ async function getGithubApiEndpoint(endpoint) {
             });
 
             req.on('error', err => {
-                throw new err;
+                throw new err();
                 reject(err);
             });
         });
@@ -232,7 +232,6 @@ const populatePackageInfo = async (onlyEmpty = false) => {
     const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
 
     console.log();
-
 
     packageInfo.name = basename(__dirname);
     packageInfo.author.name = gitCommand('config user.name').trim();
@@ -381,8 +380,8 @@ class Features {
             delete pkg.scripts['lint:fix'];
             pkg.scripts['fix'] = pkg.scripts['fix'].replace('&& npm run lint:fix', '');
 
-            for(const key of Object.keys(pkg['lint-staged'])) {
-                pkg['lint-staged'][key] = pkg['lint-staged'].filter(cmd => ! cmd.includes('eslint'));
+            for (const key of Object.keys(pkg['lint-staged'])) {
+                pkg['lint-staged'][key] = pkg['lint-staged'].filter(cmd => !cmd.includes('eslint'));
             }
 
             fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
