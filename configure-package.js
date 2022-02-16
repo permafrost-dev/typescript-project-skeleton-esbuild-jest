@@ -12,6 +12,7 @@ const readline = require('readline');
 const util = require('util');
 const cp = require('child_process');
 const { basename } = require('path');
+const https = require('https');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -65,6 +66,59 @@ const askQuestion = async (prompt, defaultValue = '') => {
         resolve(result);
     });
 };
+
+async function getGithubApiEndpoint(endpoint) {
+    const url = `https://api.github.com/${endpoint}`.replace('//', '/');
+
+    const requestJson = async url => {
+        const options = {
+            headers: {
+                'User-Agent': 'permafrost-dev-template-configure/1.0',
+                Accept: 'application/json, */*',
+            },
+        };
+
+        return new Promise((resolve, reject) => {
+            const req = https.get(url, options);
+
+            req.on('response', async res => {
+                let body = '';
+                res.setEncoding('utf-8');
+
+                for await (const chunk of res) {
+                    body += chunk;
+                }
+
+                resolve(JSON.parse(body));
+            });
+
+            req.on('error', err => {
+                throw new err;
+                reject(err);
+            });
+        });
+    };
+
+    const response = {
+        exists: true,
+        data: {},
+    };
+
+    try {
+        response.data = await requestJson(url);
+        response.exists = true;
+    } catch (e) {
+        response.exists = false;
+        response.data = {};
+    }
+
+    if (response.exists && response.data['message'] === 'Not Found') {
+        response.exists = false;
+        response.data = {};
+    }
+
+    return response;
+}
 
 function rescue(func, defaultValue = null) {
     try {
@@ -179,12 +233,19 @@ const populatePackageInfo = async (onlyEmpty = false) => {
 
     console.log();
 
+
     packageInfo.name = basename(__dirname);
     packageInfo.author.name = gitCommand('config user.name').trim();
     packageInfo.author.email = gitCommand('config user.email').trim();
     packageInfo.vendor.name = packageInfo.author.name;
     packageInfo.author.github = remoteUrlParts[1];
     packageInfo.vendor.github = remoteUrlParts[1];
+
+    const orgResponse = await getGithubApiEndpoint(`orgs/${packageInfo.vendor.github}`);
+
+    if (orgResponse.exists) {
+        packageInfo.vendor.name = orgResponse.data.name;
+    }
 
     await conditionalAsk(packageInfo, 'name', onlyEmpty, 'package name?', false);
     await conditionalAsk(packageInfo, 'description', onlyEmpty, 'package description?');
@@ -226,6 +287,7 @@ class Features {
     dependabot = {
         prompt: 'Use Dependabot?',
         enabled: true,
+        default: true,
         dependsOn: [],
         disable: () => {
             safeUnlink(getGithubConfigFilename('dependabot'));
@@ -236,6 +298,7 @@ class Features {
     automerge = {
         prompt: 'Automerge Dependabot PRs?',
         enabled: true,
+        default: true,
         dependsOn: ['dependabot'],
         disable: () => {
             safeUnlink(getWorkflowFilename('dependabot-auto-merge'));
@@ -245,6 +308,7 @@ class Features {
     codeql = {
         prompt: 'Use CodeQL Quality Analysis?',
         enabled: true,
+        default: true,
         dependsOn: [],
         disable: () => {
             safeUnlink(getWorkflowFilename('codeql-analysis'));
@@ -278,7 +342,63 @@ class Features {
         },
     };
 
-    features = [this.codecov, this.dependabot, this.automerge, this.codeql, this.updateChangelog, this.useMadgePackage];
+    useJestPackage = {
+        prompt: 'Use jest for js/ts unit testing?',
+        enabled: true,
+        default: true,
+        dependsOn: [],
+        disable: () => {
+            runCommand('npm rm jest @types/jest ts-jest');
+            safeUnlink(`${__dirname}/jest.config.js`);
+
+            const pkg = require(`${__dirname}/package.json`);
+
+            delete pkg.scripts['test:coverage'];
+            pkg.scripts['test'] = 'echo "no tests defined" && exit 0';
+
+            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
+
+            // remove tsconfig jest types reference
+            let tsConfigContent = fs.readFileSync('${__dirname}/tsconfig.json').toString();
+
+            tsConfigContent = tsConfigContent.replace(/"jest",?\s*/, '');
+            fs.writeFileSync(`${__dirname}/tsconfig.json`, tsConfigContent, { encoding: 'utf-8' });
+        },
+    };
+
+    useEslintPackage = {
+        prompt: 'Use ESLint for js/ts code linting?',
+        enabled: true,
+        default: true,
+        dependsOn: [],
+        disable: () => {
+            runCommand('npm rm eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser');
+            safeUnlink(`${__dirname}/.eslintrc.js`);
+
+            const pkg = require(`${__dirname}/package.json`);
+
+            delete pkg.scripts['lint'];
+            delete pkg.scripts['lint:fix'];
+            pkg.scripts['fix'] = pkg.scripts['fix'].replace('&& npm run lint:fix', '');
+
+            for(const key of Object.keys(pkg['lint-staged'])) {
+                pkg['lint-staged'][key] = pkg['lint-staged'].filter(cmd => ! cmd.includes('eslint'));
+            }
+
+            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
+        },
+    };
+
+    features = [
+        this.codecov,
+        this.dependabot,
+        this.automerge,
+        this.codeql,
+        this.updateChangelog,
+        this.useMadgePackage,
+        this.useJestPackage,
+        this.useEslintPackage,
+    ];
 
     async run() {
         for (let feature of this.features) {
