@@ -1,8 +1,8 @@
 /** @type {import('eslint').Linter.Config } */
 module.exports = {
-    //parser: '@typescript-eslint/parser',
+    parser: '@typescript-eslint/parser',
     parserOptions: {
-        ecmaVersion: 2020,
+        ecmaVersion: 2022,
         sourceType: 'module',
     },
     env: {
