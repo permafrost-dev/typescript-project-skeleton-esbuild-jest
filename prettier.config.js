@@ -1,20 +1,22 @@
 /** @type {import('prettier').Config} */
-const overrides = [
-    {
-        files: ['*.yml', '*.yaml'],
-        options: {
-            tabWidth: 2,
+const overrides = {
+    overrides: [
+        {
+            files: ['*.yml', '*.yaml'],
+            options: {
+                tabWidth: 2,
+            },
         },
-    },
-    {
-        files: '.madgerc',
-        options: {
-            parser: 'json',
+        {
+            files: '.madgerc',
+            options: {
+                parser: 'json',
+            },
         },
-    },
-];
+    ],
+};
 
-/** @type {import('prettier').RequiredOptions} */
+/** @type {import('prettier').Options} */
 module.exports = {
     arrowParens: 'avoid',
     bracketSameLine: true,
@@ -22,7 +24,7 @@ module.exports = {
     htmlWhitespaceSensitivity: 'css',
     insertPragma: false,
     jsxSingleQuote: false,
-    overrides,
+    ...overrides,
     printWidth: 155,
     proseWrap: 'preserve',
     quoteProps: 'as-needed',
