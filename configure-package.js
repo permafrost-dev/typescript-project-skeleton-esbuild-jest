@@ -1,18 +1,13 @@
-// @ts-nocheck
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 /**
  * configures a package created from the template.
  */
 
+const { basename } = require('path');
+const cp = require('child_process');
 const fs = require('fs');
-const path = require('path');
+const https = require('https');
 const readline = require('readline');
 const util = require('util');
-const cp = require('child_process');
-const { basename } = require('path');
-const https = require('https');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -27,13 +22,13 @@ const packageInfo = {
     name: '',
     description: '',
     vendor: {
-        name: '',
         github: '',
+        name: '',
     },
     author: {
-        name: '',
         email: '',
         github: '',
+        name: '',
     },
 };
 
@@ -138,10 +133,6 @@ function is_dir(path) {
     }
 }
 
-function is_symlink(path) {
-    return rescue(() => fs.lstatSync(path).isSymbolicLink(), false);
-}
-
 function is_file(path) {
     return rescue(() => fs.lstatSync(path).isFile(), false);
 }
@@ -172,17 +163,23 @@ const processFiles = (directory, packageInfo) => {
         return ![
             '.',
             '..',
-            '.git',
-            '.github',
             '.editorconfig',
+            '.eslintignore',
+            '.eslintrc.js',
+            '.git',
             '.gitattributes',
+            '.github',
             '.gitignore',
             '.prettierignore',
             '.prettierrc',
-            'package-lock.json',
-            'node_modules',
+            'build-library.js',
+            'build.js',
             'configure-package.js',
-        ].includes(path.basename(f));
+            'node_modules',
+            'package-lock.json',
+            'prettier.config.js',
+            'yarn.lock',
+        ].includes(basename(f));
     });
 
     files.forEach(fn => {
@@ -386,7 +383,31 @@ class Features {
 
             fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
         },
-    };
+    }
+
+    isPackageCommandLineApp = {
+        prompt: 'Is this package a command line application?',
+        enabled: true,
+        default: false,
+        dependsOn: [],
+        disable: () => {
+            const pkg = require(`${__dirname}/package.json`);
+
+            delete pkg['bin'];
+
+            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
+        },
+    }
+
+    useCommanderPackage = {
+        prompt: 'Use the commander package for creating CLI apps?',
+        enabled: true,
+        default: true,
+        dependsOn: ['isPackageCommandLineApp'],
+        disable: () => {
+            //
+        },
+    }
 
     features = [
         this.codecov,
@@ -397,6 +418,8 @@ class Features {
         this.useMadgePackage,
         this.useJestPackage,
         this.useEslintPackage,
+        this.isPackageCommandLineApp,
+        // this.useCommanderPackage,
     ];
 
     async run() {
