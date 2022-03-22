@@ -383,7 +383,7 @@ class Features {
 
             fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
         },
-    }
+    };
 
     isPackageCommandLineApp = {
         prompt: 'Is this package a command line application?',
@@ -397,7 +397,7 @@ class Features {
 
             fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
         },
-    }
+    };
 
     useCommanderPackage = {
         prompt: 'Use the commander package for creating CLI apps?',
@@ -407,7 +407,7 @@ class Features {
         disable: () => {
             //
         },
-    }
+    };
 
     features = [
         this.codecov,
