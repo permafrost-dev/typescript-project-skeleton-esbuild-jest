@@ -13,6 +13,12 @@ const overrides = {
                 parser: 'json',
             },
         },
+        {
+            files: '.eslintrc.js',
+            options: {
+                quoteProps: 'consistent',
+            },
+        }
     ],
 };
 

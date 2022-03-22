@@ -1,46 +1,63 @@
 {
     "name": "package-skeleton",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "description": "{{package.description}}",
-    "main": "dist/index.js",
-    "scripts": {
-        "analyze:deps:circular": "node_modules/.bin/madge --extensions js,ts --circular --ts-config ./tsconfig.json src/**",
-        "analyze:deps:list": "node_modules/.bin/madge --extensions js,ts --ts-config ./tsconfig.json src/**",
-        "analyze:deps:graph": "node_modules/.bin/madge --extensions js,ts --image graph.svg --layout dot --ts-config ./tsconfig.json src/**",
-        "test": "./node_modules/.bin/jest tests --verbose",
-        "test:coverage": "./node_modules/.bin/jest tests --coverage",
-        "fmt": "./node_modules/.bin/prettier --config prettier.config.js --write 'src/**/*.{js,ts,json,yml,yaml}' 'tests/**/*.{js,ts,json,yml,yaml}' './*.{js,yml,yaml,json}'",
-        "lint": "./node_modules/.bin/eslint --ext ts,js src/",
-        "lint:fix": "./node_modules/.bin/eslint --ext ts,js --fix src/",
-        "lint:staged": "./node_modules/.bin/lint-staged",
-        "fix": "npm run fmt && npm run lint:fix",
-        "build:dev": "./node_modules/.bin/esbuild --platform=node --target=node16 --define:__APP_VERSION__=\"'1.0'\" --format=cjs --bundle --outdir=dist src/index.ts",
-        "build:prod": "node ./scripts/build.js --production",
-        "dev": "npm run build:dev && node dist/index.js",
-        "prepare": "husky install"
-    },
     "author": "{{package.author.name}} <{{package.author.email}}>",
     "license": "MIT",
+    "keywords": [
+        "nodejs",
+        "typescript"
+    ],
+    "homepage": "https://github.com/{{vendor.github}}/{{package.name}}",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/{{vendor.github}}/{{package.name}}.git"
+    },
+    "bugs": {
+        "url": "https://github.com/{{vendor.github}}/{{package.name}}/issues"
+    },
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
     "lint-staged": {
         "*.{js,ts}": [
-            "./node_modules/.bin/prettier --config prettier.config.js --write",
-            "./node_modules/.bin/eslint --fix"
+            "prettier --config prettier.config.js --write",
+            "eslint --fix"
         ],
-        "*.{json,css,scss,gql}": [
-            "./node_modules/.bin/prettier --config prettier.config.js --write"
+        "*.{css,gql,graphql,html,json,less,md,mdx,sass,scss}": [
+            "prettier --config prettier.config.js --write"
         ],
         "*.{yaml,yml}": [
-            "./node_modules/.bin/prettier --config prettier.config.js --tab-width 2 --write"
+            "prettier --config prettier.config.js --tab-width 2 --write"
         ]
+    },
+    "scripts": {
+        "analyze:deps:circular": "madge --extensions js,ts --circular --ts-config tsconfig.json src/**",
+        "analyze:deps:list": "madge --extensions js,ts --ts-config tsconfig.json src/**",
+        "analyze:deps:graph": "madge --extensions js,ts --image graph.svg --layout dot --ts-config tsconfig.json src/**",
+        "test": "jest tests --verbose",
+        "test:coverage": "jest tests --coverage",
+        "fmt": "prettier --config prettier.config.js --write .",
+        "lint": "eslint --ext ts,js src/",
+        "lint:fix": "eslint --ext ts,js --fix src/",
+        "lint:staged": "lint-staged",
+        "fix": "npm run fmt && npm run lint:fix",
+        "build:dev": "node scripts/build.js",
+        "build:prod": "node scripts/build.js --production",
+        "build:dts": "dts-bundle-generator -o dist/index.d.ts src/index.ts",
+        "build": "npm run build:dev && build:dts",
+        "dev": "npm run build:dev && node dist/index.js",
+        "prepare": "husky install"
     },
     "devDependencies": {
         "@types/jest": "^27.4.1",
         "@types/node": "^17.0.21",
         "@typescript-eslint/eslint-plugin": "^5.15.0",
         "@typescript-eslint/parser": "^5.15.0",
+        "dts-bundle-generator": "^6.5.0",
         "esbuild": "^0.14.27",
         "eslint": "^8.11.0",
         "eslint-plugin-jest": "^26.1.1",
+        "eslint-plugin-node": "^11.1.0",
         "husky": "^7.0.4",
         "jest": "^27.5.1",
         "lint-staged": "^12.3.6",
@@ -48,5 +65,9 @@
         "prettier": "^2.6.0",
         "ts-jest": "^27.1.3",
         "typescript": "^4.6"
+    },
+    "bin": "bin/{{package.name}}",
+    "engines": {
+        "node": ">=14.0.0"
     }
 }
