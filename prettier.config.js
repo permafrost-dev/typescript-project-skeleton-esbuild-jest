@@ -18,7 +18,7 @@ const overrides = {
             options: {
                 quoteProps: 'consistent',
             },
-        }
+        },
     ],
 };
 
