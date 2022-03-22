@@ -51,7 +51,7 @@ module.exports = {
         'indent': [ 'warn', 4, { SwitchCase: 1 }],
         'no-eval': 'error',
         'no-var': 'error',
-        'object-curly-newline': [ 'warn', { ObjectExpression: { multiline: true, minProperties: 4 }, ObjectPattern: { multiline: true, minProperties: 4 }, ImportDeclaration: 'never' },],
+        'object-curly-newline': ['warn', { ObjectExpression: { multiline: true, minProperties: 4 }, ObjectPattern: { multiline: true, minProperties: 4 }, ImportDeclaration: 'never' },],
         'sort-imports': [
             'warn',
             {
@@ -65,4 +65,5 @@ module.exports = {
         ],
         'sort-keys': [ 'warn', 'asc', { caseSensitive: false, minKeys: 2, natural: true }],
     },
+    ignorePatterns: [ 'dist/*', 'configure-package.js' ],
 };
