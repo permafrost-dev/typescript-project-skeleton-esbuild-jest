@@ -43,6 +43,7 @@ module.exports = {
         'jest/no-identical-title': 'error',
         'newline-per-chained-call': [ 'warn', { ignoreChainWithDepth: 2 }],
         'node/no-process-exit': 'off',
+        'node/no-unpublished-require': 'off',
         'node/no-unsupported-features/es-syntax': 'off',
         'array-bracket-newline': [ 'warn', { multiline: true, minItems: 4 }],
         'array-bracket-spacing': [ 'warn', 'always', { objectsInArrays: false }],

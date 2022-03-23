@@ -1,28 +1,31 @@
-// @ts-nocheck
-
-const { realpathSync, readFileSync, writeFileSync, renameSync } = require('fs');
-const esbuild = require('esbuild');
 const { basename } = require('path');
+const { esbuildPluginDecorator } = require('esbuild-plugin-decorator');
+const {
+    realpathSync, readFileSync, writeFileSync, renameSync
+} = require('fs');
 const { spawnSync } = require('child_process');
+const esbuild = require('esbuild');
 
 const buildConfig = {
     basePath: `${__dirname}/..`,
-    outdir: 'dist',
-    format: 'cjs',
-    entry: 'src/index.ts',
     bundle: true,
-    minify: false,
     constants: {},
+    entry: 'src/index.ts',
+    format: 'cjs',
+    minify: false,
+    outdir: 'dist',
     platform: {
         name: 'node',
-        version: 16,
+        version: 14,
     },
 };
 
+const pkg = require(realpathSync(`${buildConfig.basePath}/package.json`, { encoding: 'utf-8' }));
+
 class Builder {
     config = {
-        verbose: false,
         production: false,
+        verbose: false,
     };
 
     write(msg) {
@@ -30,27 +33,33 @@ class Builder {
     }
 
     writeln(msg) {
-        process.stdout.write(`${msg}\n`.toString());
+        this.write(`${msg}\n`);
     }
 
     async compile() {
         const result = await esbuild.build({
-            logLevel: 'silent',
             absWorkingDir: buildConfig.basePath,
-            entryPoints: [buildConfig.entry],
-            outdir: buildConfig.outdir,
-            bundle: buildConfig.bundle,
-            format: buildConfig.format,
-            platform: buildConfig.platform.name,
-            target: `${buildConfig.platform.name}${buildConfig.platform.version}`,
             allowOverwrite: true,
-            minify: buildConfig.minify,
-            metafile: true,
+            bundle: buildConfig.bundle,
             define: {
-                __APP_VERSION__: `'${require(realpathSync(`${buildConfig.basePath}/package.json`, { encoding: 'utf-8' })).version}'`,
+                __APP_VERSION__: `'${pkg.version}'`,
                 __COMPILED_AT__: `'${new Date().toUTCString()}'`,
                 ...buildConfig.constants,
             },
+            entryPoints: [ buildConfig.entry ],
+            format: buildConfig.format,
+            logLevel: 'silent',
+            metafile: true,
+            minify: buildConfig.minify,
+            outdir: buildConfig.outdir,
+            platform: buildConfig.platform.name,
+            plugins: [
+                esbuildPluginDecorator({
+                    compiler: 'tsc',
+                    tsconfigPath: `${buildConfig.basePath}/tsconfig.json`,
+                }),
+            ],
+            target: `${buildConfig.platform.name}${buildConfig.platform.version}`,
         });
 
         return new Promise(resolve => resolve(result));
@@ -71,12 +80,11 @@ class Builder {
 
     processArgv() {
         const argMap = {
-            '-v': { name: 'verbose', value: true },
-            '--verbose': { name: 'verbose', value: true },
-
-            '-p': { name: 'production', value: true },
             '--prod': { name: 'production', value: true },
             '--production': { name: 'production', value: true },
+            '--verbose': { name: 'verbose', value: true },
+            '-p': { name: 'production', value: true },
+            '-v': { name: 'verbose', value: true },
         };
 
         process.argv
@@ -90,12 +98,10 @@ class Builder {
 
     convertToProductionFile() {
         const filename = basename(buildConfig.entry).replace(/\.ts$/, '.js');
-        const newFilename = require(realpathSync(`${buildConfig.basePath}/package.json`, { encoding: 'utf-8' })).name;
-
-        spawnSync('chmod', ['+x', `${buildConfig.outdir}/${filename}`], { stdio: 'ignore' });
-
+        const newFilename = pkg.name;
         const contents = readFileSync(`${buildConfig.outdir}/${filename}`, { encoding: 'utf-8' });
 
+        spawnSync('chmod', [ '+x', `${buildConfig.outdir}/${filename}` ], { stdio: 'ignore' });
         writeFileSync(`${buildConfig.outdir}/${filename}`, `#!/usr/bin/node\n\n${contents}`, { encoding: 'utf-8' });
         renameSync(`${buildConfig.outdir}/${filename}`, `${buildConfig.outdir}/${newFilename}`);
     }
