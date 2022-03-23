@@ -11,7 +11,7 @@
     "homepage": "https://github.com/{{vendor.github}}/{{package.name}}",
     "repository": {
         "type": "git",
-        "url": "https://github.com/{{vendor.github}}/{{package.name}}.git"
+        "url": "git+https://github.com/{{vendor.github}}/{{package.name}}.git"
     },
     "bugs": {
         "url": "https://github.com/{{vendor.github}}/{{package.name}}/issues"
