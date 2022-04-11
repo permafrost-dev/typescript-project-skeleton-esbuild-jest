@@ -14,6 +14,10 @@ This repository is a starter template for NodeJS projects using the latest versi
 
 It also optionally uses [Madge](https://github.com/pahen/madge) to visualize connections between classes and files within your project.
 
+Want to use `.env` files in your project? This will configure it automatically, if you want it to.
+
+Want to use a configuration file in your project? This will configure it automatically, too, if you ask it to.
+
 ## Template Setup
 
 To configure, run:
