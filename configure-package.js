@@ -471,6 +471,9 @@ function dedent(templ, ...values) {
     return string;
 }
 
+/**
+ * Removes the template README text from the README.md file
+ */
 function removeTemplateReadmeText() {
     const END_BLOCK_STR = '<!-- ==END TEMPLATE README== -->';
     const START_BLOCK_STR = '<!-- ==START TEMPLATE README== -->';
