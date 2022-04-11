@@ -10,7 +10,9 @@
 
 ## Description
 
-This is a starter template for NodeJS projects using the latest versions of TypeScript, ESBuild, ESLint, Prettier, and Jest.
+This repository is a starter template for NodeJS projects using the latest versions of TypeScript, ESBuild, ESLint, Prettier, and Jest. Use it to create NPM packages, CLI applications, and more.
+
+It also optionally uses [Madge](https://github.com/pahen/madge) to visualize connections between classes and files within your project.
 
 ## Template Setup
 
@@ -20,9 +22,12 @@ To configure, run:
 node configure-package.js
 ```
 
-This will ask you a series of questions that will customize the template with values such as your name, github username, email address, use of optional packages, and more.  Some of the default values are automatically determined based on your git configuration, but you may change any of the values when prompted.
+The configure script will ask you a series of questions that will customize the template with values such as your name, GitHub username, email address, use of optional packages, and more.
+
+Some of the default values are automatically determined based on your git configuration, but you may change any of the values when prompted.
 
 <!-- ==END TEMPLATE README== -->
+
 {{package.description}}
 
 ## Setup
@@ -35,7 +40,7 @@ npm run dev
 
 ## Testing
 
-`package-skeleton` uses Jest for unit tests.  To run the test suite:
+`package-skeleton` uses Jest for unit tests. To run the test suite:
 
 `npm run test`
 
@@ -55,8 +60,8 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
-- [{{package.author.name}}](https://github.com/{{package.author.github}})
-- [All Contributors](../../contributors)
+-   [{{package.author.name}}](https://github.com/{{package.author.github}})
+-   [All Contributors](../../contributors)
 
 ## License
 
