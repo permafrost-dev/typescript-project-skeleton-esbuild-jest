@@ -265,8 +265,46 @@ const getWorkflowFilename = name => `${__dirname}/.github/workflows/${name}.yml`
 const getGithubConfigFilename = name => `${__dirname}/.github/${name}.yml`;
 const writeFormattedJson = (filename, data) => fs.writeFileSync(filename, JSON.stringify(data, null, 4), { encoding: 'utf-8' });
 
+class PackageFile {
+    pkg = {};
+
+    constructor() {
+        this.pkg = {};
+        this.load();
+    }
+    load() {
+        this.pkg = require(`${__dirname}/package.json`);
+        return this;
+    }
+    save() {
+        writeFormattedJson(`${__dirname}/package.json`, pkg);
+        return this;
+    }
+    replaceScript(name, script) {
+        this.pkg.scripts[name] = script;
+        return this;
+    }
+    deleteScripts(...names) {
+        for (const name of names) {
+            if (typeof this.pkg.scripts[name] !== 'undefined') {
+                delete this.pkg.scripts[name];
+            }
+        }
+        return this;
+    }
+    delete(...keys) {
+        for (const key of keys) {
+            if (typeof this.pkg[key] !== 'undefined') {
+                delete this.pkg[key];
+            }
+        }
+        return this;
+    }
+}
+
 class Features {
     codecov = {
+        name: 'codecov',
         prompt: 'Use code coverage service codecov?',
         enabled: true,
         dependsOn: [],
@@ -282,6 +320,7 @@ class Features {
     };
 
     dependabot = {
+        name: 'dependabot',
         prompt: 'Use Dependabot?',
         enabled: true,
         default: true,
@@ -293,6 +332,7 @@ class Features {
     };
 
     automerge = {
+        name: 'automerge',
         prompt: 'Automerge Dependabot PRs?',
         enabled: true,
         default: true,
@@ -303,6 +343,7 @@ class Features {
     };
 
     codeql = {
+        name: 'codeql',
         prompt: 'Use CodeQL Quality Analysis?',
         enabled: true,
         default: true,
@@ -313,6 +354,7 @@ class Features {
     };
 
     updateChangelog = {
+        name: 'updateChangelog',
         prompt: 'Use Changelog Updater Workflow?',
         enabled: true,
         dependsOn: [],
@@ -322,6 +364,7 @@ class Features {
     };
 
     useMadgePackage = {
+        name: 'useMadgePackage',
         prompt: 'Use madge package for code analysis?',
         enabled: true,
         dependsOn: [],
@@ -329,17 +372,13 @@ class Features {
             runCommand('npm rm madge');
             safeUnlink(`${__dirname}/.madgerc`);
 
-            const pkg = require(`${__dirname}/package.json`);
-
-            delete pkg.scripts['analyze:deps:circular'];
-            delete pkg.scripts['analyze:deps:list'];
-            delete pkg.scripts['analyze:deps:graph'];
-
-            writeFormattedJson(`${__dirname}/package.json`, pkg);
+            const pkg = new PackageFile();
+            pkg.deleteScripts('analyze:deps:circular', 'analyze:deps:list', 'analyze:deps:graph').save();
         },
     };
 
     useJestPackage = {
+        name: 'useJestPackage',
         prompt: 'Use jest for js/ts unit testing?',
         enabled: true,
         default: true,
@@ -348,12 +387,8 @@ class Features {
             runCommand('npm rm jest @types/jest ts-jest');
             safeUnlink(`${__dirname}/jest.config.js`);
 
-            const pkg = require(`${__dirname}/package.json`);
-
-            delete pkg.scripts['test:coverage'];
-            pkg.scripts['test'] = 'echo "no tests defined" && exit 0';
-
-            writeFormattedJson(`${__dirname}/package.json`, pkg);
+            const pkg = new PackageFile();
+            pkg.deleteScripts('test:coverage').replaceScript('test', 'echo "no tests defined" && exit 0').save();
 
             // remove tsconfig jest types reference
             let tsConfigContent = fs.readFileSync('${__dirname}/tsconfig.json').toString();
@@ -364,6 +399,7 @@ class Features {
     };
 
     useEslintPackage = {
+        name: 'useEslintPackage',
         prompt: 'Use ESLint for js/ts code linting?',
         enabled: true,
         default: true,
@@ -372,35 +408,35 @@ class Features {
             runCommand('npm rm eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser');
             safeUnlink(`${__dirname}/.eslintrc.js`);
 
-            const pkg = require(`${__dirname}/package.json`);
+            const pkg = new PackageFile();
 
-            delete pkg.scripts['lint'];
-            delete pkg.scripts['lint:fix'];
-            pkg.scripts['fix'] = pkg.scripts['fix'].replace('&& npm run lint:fix', '');
+            pkg.deleteScripts('lint', 'lint:fix').replaceScript('fix', pkg.pkg.scripts['fix'].replace('&& npm run lint:fix', ''));
 
-            for (const key of Object.keys(pkg['lint-staged'])) {
-                pkg['lint-staged'][key] = pkg['lint-staged'].filter(cmd => !cmd.includes('eslint'));
+            for (const key of Object.keys(pkg.pkg['lint-staged'])) {
+                pkg.pkg['lint-staged'][key] = pkg.pkg['lint-staged'].filter(cmd => !cmd.includes('eslint'));
             }
 
-            writeFormattedJson(`${__dirname}/package.json`, pkg);
+            pkg.save();
         },
     };
 
     isPackageCommandLineApp = {
+        name: 'isPackageCommandLineApp',
         prompt: 'Is this package a command line application?',
         enabled: true,
         default: false,
         dependsOn: [],
         disable: () => {
-            const pkg = require(`${__dirname}/package.json`);
+            const pkg = new PackageFile();
 
-            delete pkg['bin'];
+            pkg.delete('bin').save();
 
-            writeFormattedJson(`${__dirname}/package.json`, pkg);
+            this.useCommanderPackage.disable();
         },
     };
 
     useCommanderPackage = {
+        name: 'useCommanderPackage',
         prompt: 'Use the commander package for creating CLI apps?',
         enabled: true,
         default: true,
@@ -424,10 +460,20 @@ class Features {
     ];
 
     async run() {
+        const state = {};
+
         for (let feature of this.features) {
+            if (feature.dependsOn.length > 0) {
+                const dependencies = feature.dependsOn.map(dep => state[dep]);
+
+                feature.enabled = dependencies.every(dep => dep);
+            }
+
             if (feature.enabled) {
                 feature.enabled = await askBooleanQuestion(feature.prompt, feature.default);
             }
+
+            state[feature.name] = feature.enabled;
 
             if (!feature.enabled) {
                 feature.disable();
