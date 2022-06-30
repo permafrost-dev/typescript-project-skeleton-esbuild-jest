@@ -5,7 +5,7 @@
 		}
 	},
 	"graphVizOptions": {
-        "G": {            
+        "G": {
             "pad": 0.25,
             "ranksep": 0.18,
             "nodesep": 0.18,
