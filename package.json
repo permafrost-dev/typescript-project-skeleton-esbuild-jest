@@ -44,7 +44,7 @@
         "build:dev": "node scripts/build.js",
         "build:prod": "node scripts/build.js --production",
         "build:dts": "dts-bundle-generator -o dist/index.d.ts src/index.ts",
-        "build": "npm run build:dev && build:dts",
+        "build": "npm run build:dev && npm run build:dts",
         "dev": "npm run build:dev && node dist/index.js",
         "prepare": "husky install"
     },
