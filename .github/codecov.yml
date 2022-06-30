@@ -15,7 +15,7 @@ coverage:
         informational: true
   precision: 2
   round: up
-  range: "40...80"
+  range: '40...80'
 
 parsers:
   javascript:
@@ -28,12 +28,13 @@ parsers:
       macro: no
 
 comment:
-  layout: "reach,diff,flags,files,footer"
+  layout: 'reach,diff,flags,files,footer'
   behavior: default
   require_changes: true
 
 ignore:
-  - "build/"
-  - "dist/"
-  - ".eslintrc.js"
-  - "jest.config.js"
+  - 'build/'
+  - 'dist/'
+  - '.eslintrc.js'
+  - 'jest.config.js'
+  - 'prettier.config.js'
