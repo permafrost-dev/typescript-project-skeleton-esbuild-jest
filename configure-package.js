@@ -263,6 +263,7 @@ const populatePackageInfo = async (onlyEmpty = false) => {
 const safeUnlink = path => fs.existsSync(path) && fs.unlinkSync(path);
 const getWorkflowFilename = name => `${__dirname}/.github/workflows/${name}.yml`;
 const getGithubConfigFilename = name => `${__dirname}/.github/${name}.yml`;
+const writeFormattedJson = (filename, data) => fs.writeFileSync(filename, JSON.stringify(data, null, 4), { encoding: 'utf-8' });
 
 class Features {
     codecov = {
@@ -334,7 +335,7 @@ class Features {
             delete pkg.scripts['analyze:deps:list'];
             delete pkg.scripts['analyze:deps:graph'];
 
-            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
+            writeFormattedJson(`${__dirname}/package.json`, pkg);
         },
     };
 
@@ -352,7 +353,7 @@ class Features {
             delete pkg.scripts['test:coverage'];
             pkg.scripts['test'] = 'echo "no tests defined" && exit 0';
 
-            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
+            writeFormattedJson(`${__dirname}/package.json`, pkg);
 
             // remove tsconfig jest types reference
             let tsConfigContent = fs.readFileSync('${__dirname}/tsconfig.json').toString();
@@ -381,7 +382,7 @@ class Features {
                 pkg['lint-staged'][key] = pkg['lint-staged'].filter(cmd => !cmd.includes('eslint'));
             }
 
-            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
+            writeFormattedJson(`${__dirname}/package.json`, pkg);
         },
     };
 
@@ -395,7 +396,7 @@ class Features {
 
             delete pkg['bin'];
 
-            fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pkg, null, 4), { encoding: 'utf-8' });
+            writeFormattedJson(`${__dirname}/package.json`, pkg);
         },
     };
 
@@ -433,42 +434,6 @@ class Features {
             }
         }
     }
-}
-
-function dedent(templ, ...values) {
-    let strings = Array.from(typeof templ === 'string' ? [templ] : templ);
-    strings[strings.length - 1] = strings[strings.length - 1].replace(/\r?\n([\t ]*)$/, '');
-    const indentLengths = strings.reduce((arr, str) => {
-        const matches = str.match(/\n([\t ]+|(?!\s).)/g);
-        if (matches) {
-            return arr.concat(
-                matches.map(match => {
-                    var _a;
-                    return ((_a = match.match(/[\t ]/g)) == null ? void 0 : _a.length) ?? 0;
-                }),
-            );
-        }
-        return arr;
-    }, []);
-    if (indentLengths.length) {
-        const pattern = new RegExp(`[	 ]{${Math.min(...indentLengths)}}`, 'g');
-        strings = strings.map(str => str.replace(pattern, '\n'));
-    }
-    strings[0] = strings[0].replace(/^\r?\n/, '');
-    let string = strings[0];
-    values.forEach((value, i) => {
-        const endentations = string.match(/(?:^|\n)( *)$/);
-        const endentation = endentations ? endentations[1] : '';
-        let indentedValue = value;
-        if (typeof value === 'string' && value.includes('\n')) {
-            indentedValue = String(value)
-                .split('\n')
-                .map((str, i2) => (i2 === 0 ? str : `${endentation}${str}`))
-                .join('\n');
-        }
-        string += indentedValue + strings[i + 1];
-    });
-    return string;
 }
 
 /**
