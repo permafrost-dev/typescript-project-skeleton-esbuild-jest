@@ -277,7 +277,7 @@ class PackageFile {
         return this;
     }
     save() {
-        writeFormattedJson(`${__dirname}/package.json`, pkg);
+        writeFormattedJson(`${__dirname}/package.json`, this.pkg);
         return this;
     }
     replaceScript(name, script) {
