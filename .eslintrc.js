@@ -58,7 +58,6 @@ module.exports = {
         'sort-imports': [
             'warn',
             {
-                caseSensitive: false,
                 memberSyntaxSortOrder: [
                     'multiple',
                     'single',
