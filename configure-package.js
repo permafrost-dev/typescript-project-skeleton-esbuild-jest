@@ -168,7 +168,6 @@ const processFiles = (directory, packageInfo) => {
             '.eslintrc.js',
             '.git',
             '.gitattributes',
-            '.github',
             '.gitignore',
             '.prettierignore',
             '.prettierrc',
