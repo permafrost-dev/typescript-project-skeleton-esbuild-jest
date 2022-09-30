@@ -1,9 +1,9 @@
 const { basename } = require('path');
-const { esbuildPluginDecorator } = require('esbuild-plugin-decorator');
+//const { esbuildPluginDecorator } = require('esbuild-plugin-decorator');
 const {
-    realpathSync, readFileSync, writeFileSync, renameSync
+    realpathSync, readFileSync, writeFileSync, renameSync, existsSync 
 } = require('fs');
-const { spawnSync } = require('child_process');
+const { spawnSync, execSync } = require('child_process');
 const esbuild = require('esbuild');
 
 const buildConfig = {
@@ -26,6 +26,7 @@ class Builder {
     config = {
         production: false,
         verbose: false,
+        binaries: false,
     };
 
     write(msg) {
@@ -54,10 +55,10 @@ class Builder {
             outdir: buildConfig.outdir,
             platform: buildConfig.platform.name,
             plugins: [
-                esbuildPluginDecorator({
-                    compiler: 'tsc',
-                    tsconfigPath: `${buildConfig.basePath}/tsconfig.json`,
-                }),
+                // esbuildPluginDecorator({
+                //     compiler: 'tsc',
+                //     tsconfigPath: `${buildConfig.basePath}/tsconfig.json`,
+                // }),
             ],
             target: `${buildConfig.platform.name}${buildConfig.platform.version}`,
         });
@@ -83,6 +84,7 @@ class Builder {
             '--prod': { name: 'production', value: true },
             '--production': { name: 'production', value: true },
             '--verbose': { name: 'verbose', value: true },
+            '--binaries': { name: 'binaries', value: true },
             '-p': { name: 'production', value: true },
             '-v': { name: 'verbose', value: true },
         };
@@ -94,16 +96,52 @@ class Builder {
                 return hasMappedArg ? { name: arg.replace(/^-+/, ''), value: true } : argMap[arg];
             })
             .forEach(data => (this.config[data.name] = data.value));
+
+        console.log(this.config);
     }
 
     convertToProductionFile() {
         const filename = basename(buildConfig.entry).replace(/\.ts$/, '.js');
         const newFilename = pkg.name;
+        const binaryFilename = `${buildConfig.outdir}/${filename.replace(/.js$/, '')}`;
         const contents = readFileSync(`${buildConfig.outdir}/${filename}`, { encoding: 'utf-8' });
 
         spawnSync('chmod', [ '+x', `${buildConfig.outdir}/${filename}` ], { stdio: 'ignore' });
         writeFileSync(`${buildConfig.outdir}/${filename}`, `#!/usr/bin/node\n\n${contents}`, { encoding: 'utf-8' });
         renameSync(`${buildConfig.outdir}/${filename}`, `${buildConfig.outdir}/${newFilename}`);
+
+        if (existsSync(binaryFilename)) {
+            renameSync(binaryFilename, `${buildConfig.outdir}/${newFilename}-${pkg.version}`);
+        }
+    }
+
+    compileBinaries() {
+        //const filename = `${pkg.name}-v${pkg.version}`;
+        const filename = basename(buildConfig.entry).replace(/\.ts$/, '.js');
+        execSync(
+            `npx pkg --compress Brotli --targets node16-linux-x64,node16-macos-x64,node16-win-x64 --out-path ${buildConfig.outdir} ${buildConfig.outdir}/${filename}`,
+            { stdio: 'inherit' },
+        );
+
+        const platforms = [
+            'linux',
+            'macos',
+            'win' 
+        ];
+
+        const origBinaries = platforms
+            .map(os => `${buildConfig.outdir}/${filename.replace(/.js$/, '')}-${os}`)
+            .map(fn => (fn.includes('-win') ? `${fn}.exe` : fn));
+
+        const newBinaries = platforms
+            .map(os => `${buildConfig.outdir}/${pkg.name}-v${pkg.version}-${os}-x64`)
+            .map(fn => (fn.includes('-win') ? `${fn}.exe` : fn));
+
+        for (const originalFn of origBinaries) {
+            const newFn = newBinaries[origBinaries.indexOf(originalFn)];
+            renameSync(originalFn, newFn);
+            spawnSync('chmod', [ '+x', newFn ], { stdio: 'ignore' });
+        }
     }
 
     async run() {
@@ -117,6 +155,11 @@ class Builder {
 
         const startedTs = new Date().getTime();
         const results = await this.compile();
+
+        if (this.config.binaries) {
+            this.compileBinaries();
+        }
+
         const finishedTs = new Date().getTime();
 
         if (this.config.verbose) {
