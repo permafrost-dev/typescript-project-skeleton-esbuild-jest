@@ -54,7 +54,7 @@ module.exports = {
         'indent': [ 'warn', 4, { SwitchCase: 1 }],
         'no-eval': 'error',
         'no-var': 'error',
-        'object-curly-newline': ['warn', { ObjectExpression: { multiline: true, minProperties: 4 }, ObjectPattern: { multiline: true, minProperties: 4 }, ImportDeclaration: 'never' },],
+        'object-curly-newline': [ 'warn', { ObjectExpression: { multiline: true, minProperties: 4 }, ObjectPattern: { multiline: true, minProperties: 4 }, ImportDeclaration: 'never' },],
         'sort-imports': [
             'warn',
             {

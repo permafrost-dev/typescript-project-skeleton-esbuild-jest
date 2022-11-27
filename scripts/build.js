@@ -116,18 +116,16 @@ class Builder {
     }
 
     compileBinaries() {
-        //const filename = `${pkg.name}-v${pkg.version}`;
-        const filename = basename(buildConfig.entry).replace(/\.ts$/, '.js');
-        execSync(
-            `npx pkg --compress Brotli --targets node16-linux-x64,node16-macos-x64,node16-win-x64 --out-path ${buildConfig.outdir} ${buildConfig.outdir}/${filename}`,
-            { stdio: 'inherit' },
-        );
-
         const platforms = [
             'linux',
             'macos',
             'win' 
         ];
+        const filename = basename(buildConfig.entry).replace(/\.ts$/, '.js');
+        const targets = platforms.map(t => `node16-${t.toLowerCase()}-x64`);
+        const cmd = `npx pkg --compress Brotli --targets ${targets.join(',')} --out-path ${buildConfig.outdir} ${buildConfig.outdir}/${filename}`;
+
+        execSync(cmd, { stdio: 'inherit' });
 
         const origBinaries = platforms
             .map(os => `${buildConfig.outdir}/${filename.replace(/.js$/, '')}-${os}`)
