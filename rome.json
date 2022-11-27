@@ -1,0 +1,17 @@
+{
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentSize": 4,
+        "lineWidth": 155
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "trailingComma": "all"
+        }
+    },
+    "linter": {
+        "enabled": false
+    }
+}
