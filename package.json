@@ -20,6 +20,7 @@
     "typings": "dist/index.d.ts",
     "lint-staged": {
         "*.{js,ts}": [
+            "rome check --apply-suggested",
             "prettier --config prettier.config.js --write",
             "eslint --fix"
         ],
@@ -36,7 +37,7 @@
         "analyze:deps:graph": "madge --extensions js,ts --image graph.svg --layout dot --ts-config tsconfig.json src/**",
         "test": "jest tests --verbose",
         "test:coverage": "jest tests --coverage",
-        "fmt": "prettier --config prettier.config.js --write .",
+        "fmt": "rome --apply-suggested . && prettier --config prettier.config.js --write .",
         "lint": "eslint --ext ts,js src/",
         "lint:fix": "eslint --ext ts,js --fix src/",
         "lint:staged": "lint-staged",
@@ -49,7 +50,6 @@
         "dev": "npm run build:dev && node dist/index.js",
         "prepare": "husky install"
     },
-    "dependencies": {},
     "devDependencies": {
         "@types/jest": "^29.2.0",
         "@types/node": "^18.11.7",
@@ -65,6 +65,7 @@
         "lint-staged": "^13.0.3",
         "madge": "^5.0.1",
         "prettier": "^2.7.1",
+        "rome": "^10.0.1",
         "ts-jest": "^29.0.3",
         "typescript": "^4.8"
     },
