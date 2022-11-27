@@ -24,9 +24,9 @@ const pkg = require(realpathSync(`${buildConfig.basePath}/package.json`, { encod
 
 class Builder {
     config = {
+        binaries: false,
         production: false,
         verbose: false,
-        binaries: false,
     };
 
     write(msg) {
@@ -67,7 +67,7 @@ class Builder {
     }
 
     sizeForDisplay(bytes) {
-        return `${bytes / 1024}`.slice(0, 4) + ' kb';
+        return `${`${bytes / 1024}`.slice(0, 4)} kb`;
     }
 
     reportCompileResults(results) {
@@ -81,10 +81,10 @@ class Builder {
 
     processArgv() {
         const argMap = {
+            '--binaries': { name: 'binaries', value: true },
             '--prod': { name: 'production', value: true },
             '--production': { name: 'production', value: true },
             '--verbose': { name: 'verbose', value: true },
-            '--binaries': { name: 'binaries', value: true },
             '-p': { name: 'production', value: true },
             '-v': { name: 'verbose', value: true },
         };
@@ -166,7 +166,7 @@ class Builder {
             this.reportCompileResults(results);
         }
 
-        this.writeln((this.config.verbose ? `* D` : `d`) + `one. (${finishedTs - startedTs} ms)`);
+        this.writeln(`${this.config.verbose ? '* D' : 'd'}one. (${finishedTs - startedTs} ms)`);
 
         if (this.config.production) {
             this.convertToProductionFile();

@@ -65,18 +65,20 @@ class Builder {
                     __COMPILED_AT__: `'${new Date().toUTCString()}'`,
                     ...buildConfig.constants,
                 },
-                entryPoints: [buildConfig.entry],
+                entryPoints: [ buildConfig.entry ],
                 external: dependencyNames,
                 format: buildConfig.format,
+                keepNames: true,
                 logLevel: 'silent',
                 metafile: true,
                 minify: buildConfig.minify || this.config.minify,
                 outfile: buildConfig.outfile,
                 platform: buildConfig.platform.name,
                 target: `es2015`,
+                treeShaking: false,
             });
 
-            const text = esbuild.analyzeMetafileSync(result.metafile, {color: true,});
+            const text = esbuild.analyzeMetafileSync(result.metafile, { color: true });
 
             result['meta'] = text;
 
