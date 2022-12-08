@@ -123,7 +123,7 @@ function getGithubUsernameFromGitRemote() {
 function searchCommitsForGithubUsername() {
     const authorName = gitCommand(`config user.name`).trim().toLowerCase();
 
-    const committers = gitCommand(`git log --author='@users.noreply.github.com'  --pretty='%an:%ae' --reverse`)
+    const committers = gitCommand(`log --author='@users.noreply.github.com'  --pretty='%an:%ae' --reverse`)
         .split('\n')
         .map(line => line.trim())
         .map(line => ({ name: line.split(':')[0], email: line.split(':')[1] }))
