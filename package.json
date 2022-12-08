@@ -20,7 +20,7 @@
     "typings": "dist/index.d.ts",
     "lint-staged": {
         "*.{js,ts}": [
-            "rome check --apply-suggested",
+            "rome format --write --skip-errors",
             "prettier --config prettier.config.js --write",
             "eslint --fix"
         ],
