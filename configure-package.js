@@ -115,6 +115,38 @@ async function getGithubApiEndpoint(endpoint) {
     return response;
 }
 
+function getGithubUsernameFromGitRemote() {
+    const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
+    return remoteUrlParts[1];
+}
+
+function searchCommitsForGithubUsername() {
+    const authorName = gitCommand(`config user.name`).trim().toLowerCase();
+
+    const committers = gitCommand(`git log --author='@users.noreply.github.com'  --pretty='%an:%ae' --reverse`)
+        .split('\n')
+        .map(line => line.trim())
+        .map(line => ({ name: line.split(':')[0], email: line.split(':')[1] }))
+        .filter(item => !item.name.includes('[bot]'))
+        .filter(item => item.name.toLowerCase().localeCompare(authorName.toLowerCase()) === 0);
+
+    if (!committers.length) {
+        return '';
+    }
+
+    return committers[0].email.split('@')[0];
+}
+
+function guessGithubUsername() {
+    const username = searchCommitsForGithubUsername();
+
+    if (username.length) {
+        return username;
+    }
+
+    return getGithubUsernameFromGitRemote();
+}
+
 function rescue(func, defaultValue = null) {
     try {
         return func();
@@ -233,7 +265,7 @@ const populatePackageInfo = async (onlyEmpty = false) => {
     packageInfo.author.name = gitCommand('config user.name').trim();
     packageInfo.author.email = gitCommand('config user.email').trim();
     packageInfo.vendor.name = packageInfo.author.name;
-    packageInfo.author.github = remoteUrlParts[1];
+    packageInfo.author.github = guessGithubUsername();
     packageInfo.vendor.github = remoteUrlParts[1];
 
     const orgResponse = await getGithubApiEndpoint(`orgs/${packageInfo.vendor.github}`);
@@ -646,8 +678,12 @@ const run = async function () {
     console.log('Done, removing this script.');
     fs.unlinkSync(__filename);
 
-    runCommand('git add .');
-    runCommand('git commit -m"commit configured package files"');
+    try {
+        runCommand('git add .');
+        runCommand('git commit -m"commit configured package files"');
+    } catch (e) {
+        console.log('Error committing files: ' + e);
+    }
 };
 
 run();
