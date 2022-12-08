@@ -555,7 +555,12 @@ class OptionalPackages {
         name: 'conf',
         add: () => {
             cp.execSync('npm install conf js-yaml', { cwd: __dirname, stdio: 'inherit' });
-            fs.writeFileSync(`${__dirname}/config.yaml`, '', { encoding: 'utf-8' });
+
+            if (!fs.existsSync(path.join(__dirname, 'dist'))) {
+                fs.mkdirSync(path.join(__dirname, 'dist', { recursive: true }));
+            }
+
+            fs.writeFileSync(`${__dirname}/dist/config.yaml`, '', { encoding: 'utf-8' });
 
             fs.writeFileSync(
                 `${__dirname}/src/config.ts`,
