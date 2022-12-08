@@ -675,14 +675,18 @@ const run = async function () {
 
     rl.close();
 
-    console.log('Done, removing this script.');
-    fs.unlinkSync(__filename);
+    try {
+        console.log('Done, removing this script.');
+        fs.unlinkSync(__filename);
+    } catch (e) {
+        console.log('Error removing script: ', e);
+    }
 
     try {
         runCommand('git add .');
         runCommand('git commit -m"commit configured package files"');
     } catch (e) {
-        console.log('Error committing files: ' + e);
+        console.log('Error committing files: ', e);
     }
 };
 
