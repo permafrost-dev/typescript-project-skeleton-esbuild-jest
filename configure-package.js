@@ -645,8 +645,14 @@ async function configureOptionalFeatures() {
 }
 
 const askBooleanQuestion = async str => {
-    const resultStr = await askQuestion(`${str} `);
-    const result = resultStr.toString().toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
+    let resultStr = await askQuestion(`${str} [Y/n] `);
+    resultStr = resultStr.toString().trim();
+
+    if (resultStr.length === 0) {
+        resultStr = 'yes';
+    }
+
+    const result = resultStr.toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
 
     return result === 'y';
 };
@@ -655,7 +661,7 @@ const run = async function () {
     await populatePackageInfo();
     await configureOptionalFeatures();
 
-    const confirm = (await askQuestion('Process files (this will modify files)? '))
+    const confirm = (await askQuestion('Process files (this will modify files) [y/N]? '))
         .toString()
         .toLowerCase()
         .replace(/ /g, '')
