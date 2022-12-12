@@ -350,6 +350,17 @@ class Features {
         },
     };
 
+    autoformat = {
+        name: 'autoformat',
+        prompt: 'Automatically lint & format code on push?',
+        enabled: true,
+        default: true,
+        dependsOn: [],
+        disable: () => {
+            safeUnlink(getWorkflowFilename('format-code'));
+        },
+    };
+
     dependabot = {
         name: 'dependabot',
         prompt: 'Use Dependabot?',
@@ -466,19 +477,9 @@ class Features {
         },
     };
 
-    useCommanderPackage = {
-        name: 'useCommanderPackage',
-        prompt: 'Use the commander package for creating CLI apps?',
-        enabled: true,
-        default: true,
-        dependsOn: ['isPackageCommandLineApp'],
-        disable: () => {
-            //
-        },
-    };
-
     features = [
         this.codecov,
+        this.autoformat,
         this.dependabot,
         this.automerge,
         this.codeql,
@@ -487,7 +488,6 @@ class Features {
         this.useJestPackage,
         this.useEslintPackage,
         this.isPackageCommandLineApp,
-        // this.useCommanderPackage,
     ];
 
     async run() {
@@ -629,14 +629,11 @@ class OptionalPackages {
             }
         }
 
-        const packageList = await askQuestion(this.otherPackages, this.otherPackages.default);
+        const packageList = await askQuestion(this.otherPackages.prompt, this.otherPackages.default);
 
         if (packageList.length > 0) {
             this.otherPackages.add(packageList.split(',').map(pkg => pkg.trim()));
         }
-
-        cp.execSync('node ./node_modules/.bin/prettier --write ./src', { cwd: __dirname, stdio: 'inherit' });
-        cp.execSync('node ./node_modules/.bin/eslint --fix ./src', { cwd: __dirname, stdio: 'inherit' });
     }
 }
 
@@ -655,6 +652,11 @@ const askBooleanQuestion = async str => {
     const result = resultStr.toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
 
     return result === 'y';
+};
+
+const lintAndFormatSourceFiles = () => {
+    cp.execSync('node ./node_modules/.bin/prettier --write ./src', { cwd: __dirname, stdio: 'inherit' });
+    cp.execSync('node ./node_modules/.bin/eslint --fix ./src', { cwd: __dirname, stdio: 'inherit' });
 };
 
 const run = async function () {
@@ -677,11 +679,17 @@ const run = async function () {
     try {
         removeTemplateReadmeText();
         removeAssetsDirectory();
+    } catch (e) {
+        console.log('Error removing template assets: ', e);
+    }
+
+    try {
         processFiles(__dirname, packageInfo);
         installDependencies();
         await new OptionalPackages().run();
+        lintAndFormatSourceFiles();
     } catch (err) {
-        //
+        console.log('Error: ', err);
     }
 
     rl.close();
