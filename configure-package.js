@@ -462,6 +462,22 @@ class Features {
         },
     };
 
+    useTypedocPackage = {
+        name: 'useTypedocPackage',
+        prompt: 'Use typedoc to generate api docs?',
+        enabled: true,
+        default: true,
+        dependsOn: [],
+        disable: () => {
+            runCommand('npm rm typedoc typedoc-plugin-markdown');
+
+            const pkg = new PackageFile();
+
+            pkg.deleteScripts('build:api-docs');
+            pkg.save();
+        },
+    };
+
     isPackageCommandLineApp = {
         name: 'isPackageCommandLineApp',
         prompt: 'Is this package a command line application?',
@@ -487,6 +503,7 @@ class Features {
         this.useMadgePackage,
         this.useJestPackage,
         this.useEslintPackage,
+        this.useTypedocPackage,
         this.isPackageCommandLineApp,
     ];
 
