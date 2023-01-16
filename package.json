@@ -57,7 +57,7 @@
         "@typescript-eslint/eslint-plugin": "^5.46.1",
         "@typescript-eslint/parser": "^5.46.1",
         "dts-bundle-generator": "^7.1.0",
-        "esbuild": "^0.16.6",
+        "esbuild": "^0.17.0",
         "eslint": "^8.29.0",
         "eslint-plugin-jest": "^27.1.6",
         "eslint-plugin-node": "^11.1.0",
