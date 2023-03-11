@@ -855,8 +855,18 @@ const run = async function () {
     try {
         processFiles(__dirname, packageInfo);
         installDependencies();
+    } catch (err) {
+        console.log('Error: ', err);
+    }
+
+    try {
         await new FeaturePacks().run();
         await new OptionalPackages().run();
+    } catch (err) {
+        console.log('Error: ', err);
+    }
+
+    try {
         lintAndFormatSourceFiles();
     } catch (err) {
         console.log('Error: ', err);
