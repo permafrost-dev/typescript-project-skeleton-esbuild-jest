@@ -587,7 +587,7 @@ function removeFeaturesDirectory() {
 function copyDirectory(src, dest, ignores = []) {
     // Create destination directory if it doesn't exist
     if (!fs.existsSync(dest)) {
-        //fs.mkdirSync(dest);
+        fs.mkdirSync(dest);
     }
 
     const files = fs.readdirSync(src);
@@ -776,21 +776,21 @@ class FeaturePacks {
 
     /** @param {import('./configure-package.d.ts').Feature} feature */
     addFeature(feature) {
-        // const pkg = new PackageFile();
+        const pkg = new PackageFile();
 
-        // for (const script in feature.scripts) {
-        //     pkg.addScript(script, feature.scripts[script]);
-        // }
+        for (const script in feature.scripts) {
+            pkg.addScript(script, feature.scripts[script]);
+        }
 
-        // pkg.save();
+        pkg.save();
 
-        // if (Object.values(feature.packages.dependencies).length) {
-        //     runCommand(`npm install ${feature.packages.dependencies.join(' ')}`, { cwd: __dirname, stdio: 'inherit' });
-        // }
+        if (Object.values(feature.packages.dependencies).length) {
+            runCommand(`npm install ${feature.packages.dependencies.join(' ')}`, { cwd: __dirname, stdio: 'inherit' });
+        }
 
-        // if (Object.values(feature.packages.devDependencies).length) {
-        //     runCommand(`npm install ${feature.packages.devDependencies.join(' ')} -D`, { cwd: __dirname, stdio: 'inherit' });
-        // }
+        if (Object.values(feature.packages.devDependencies).length) {
+            runCommand(`npm install ${feature.packages.devDependencies.join(' ')} -D`, { cwd: __dirname, stdio: 'inherit' });
+        }
 
         copyDirectory(feature.path, __dirname, [feature.featureScript]);
     }
@@ -828,9 +828,6 @@ const lintAndFormatSourceFiles = () => {
 };
 
 const run = async function () {
-    await new FeaturePacks().run();
-    process.exit(0);
-
     await populatePackageInfo();
     await configureOptionalFeatures();
 
@@ -870,6 +867,7 @@ const run = async function () {
     try {
         console.log('Done, removing this script.');
         fs.unlinkSync(__filename);
+        fs.unlinkSync('./configure-package.d.ts');
     } catch (e) {
         console.log('Error removing script: ', e);
     }
