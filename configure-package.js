@@ -809,12 +809,13 @@ async function configureOptionalFeatures() {
     await new Features().run();
 }
 
-const askBooleanQuestion = async str => {
-    let resultStr = await askQuestion(`${str} [Y/n] `);
+const askBooleanQuestion = async (str, defaultAnswer = true) => {
+    const suffix = defaultAnswer ? '[Y/n]' : '[y/N]';
+    let resultStr = await askQuestion(`${str} ${suffix} `);
     resultStr = resultStr.toString().trim();
 
     if (resultStr.length === 0) {
-        resultStr = 'yes';
+        resultStr = defaultAnswer ? 'yes' : 'no';
     }
 
     const result = resultStr.toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
@@ -849,7 +850,7 @@ const run = async function () {
         removeAssetsDirectory();
         removeFeaturesDirectory();
     } catch (e) {
-        console.log('Error removing template assets: ', e);
+        console.log('Error: ', e);
     }
 
     try {
@@ -872,8 +873,6 @@ const run = async function () {
         console.log('Error: ', err);
     }
 
-    rl.close();
-
     try {
         console.log('Done, removing this script.');
         fs.unlinkSync(__filename);
@@ -888,6 +887,8 @@ const run = async function () {
     } catch (e) {
         console.log('Error committing files: ', e);
     }
+
+    rl.close();
 };
 
 run();
