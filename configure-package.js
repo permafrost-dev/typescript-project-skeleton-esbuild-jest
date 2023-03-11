@@ -8,6 +8,7 @@ const fs = require('fs');
 const https = require('https');
 const readline = require('readline');
 const util = require('util');
+const path = require('path');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -311,6 +312,10 @@ class PackageFile {
         writeFormattedJson(`${__dirname}/package.json`, this.pkg);
         return this;
     }
+    addScript(name, script) {
+        this.pkg.scripts[name] = script;
+        return this;
+    }
     replaceScript(name, script) {
         this.pkg.scripts[name] = script;
         return this;
@@ -370,6 +375,7 @@ class Features {
         disable: () => {
             safeUnlink(getGithubConfigFilename('dependabot'));
             this.automerge.disable();
+            this.automerge.enabled = false;
         },
     };
 
@@ -489,7 +495,7 @@ class Features {
 
             pkg.delete('bin').save();
 
-            this.useCommanderPackage.disable();
+            //this.useCommanderPackage.disable();
         },
     };
 
@@ -563,6 +569,112 @@ function removeAssetsDirectory() {
     }
 }
 
+function removeFeaturesDirectory() {
+    try {
+        removeDirectory(`${__dirname}/features`);
+        fs.rmdirSync(`${__dirname}/features`);
+    } catch (e) {
+        //
+    }
+}
+
+/**
+ * recursively copy a source directory to a destination directory
+ * @param {string} src
+ * @param {string} dest
+ * @param {string[]} ignores
+ */
+function copyDirectory(src, dest, ignores = []) {
+    // Create destination directory if it doesn't exist
+    if (!fs.existsSync(dest)) {
+        //fs.mkdirSync(dest);
+    }
+
+    const files = fs.readdirSync(src);
+
+    for (const file of files) {
+        const filePath = path.join(src, file);
+        const destPath = path.join(dest, file);
+
+        if (ignores.includes(filePath) || ignores.includes(file)) {
+            continue;
+        }
+
+        if (fs.lstatSync(filePath).isDirectory()) {
+            if (!fs.existsSync(destPath)) {
+                fs.mkdirSync(destPath, { recursive: true });
+            }
+            // Recursively copy directory
+            copyDirectory(filePath, destPath, ignores);
+        } else {
+            fs.copyFileSync(filePath, destPath);
+        }
+    }
+}
+
+/**
+ * recursively remove a directory
+ * @param {string} src
+ * @returns void
+ */
+function removeDirectory(src) {
+    if (!fs.existsSync(src)) {
+        return;
+    }
+
+    const files = fs.readdirSync(src);
+
+    if (files.length === 0) {
+        fs.rmdirSync(src);
+        return;
+    }
+
+    for (const file of files) {
+        const filePath = path.join(src, file);
+
+        if (fs.lstatSync(filePath).isDirectory()) {
+            // Recursively remove directories
+            removeDirectory(filePath);
+        } else {
+            fs.unlinkSync(filePath);
+        }
+    }
+}
+
+/**
+ * load and return features from the features directory.
+ * feature directories must contain a feature.js file.
+ *
+ * @returns {import('./configure-package.d.ts').Feature[]}
+ */
+function loadFeatures() {
+    const src = `${__dirname}/features`;
+
+    if (!fs.existsSync(src)) {
+        return [];
+    }
+
+    const files = fs.readdirSync(src);
+    /** @type import('./configure-package.d.ts').Feature[] */
+    const features = [];
+
+    for (const file of files) {
+        const filePath = path.join(src, file);
+
+        if (fs.lstatSync(filePath).isDirectory()) {
+            const featureScript = `${filePath}/feature.js`;
+
+            if (fs.existsSync(featureScript)) {
+                /** @type import('./configure-package.d.ts').Feature */
+                const feature = require(featureScript);
+                features.push({ ...feature.feature, path: filePath, featureScript });
+            }
+        }
+    }
+
+    return features;
+}
+
 class OptionalPackages {
     config = {
         prompt: 'Use a yaml config file?',
@@ -618,7 +730,7 @@ class OptionalPackages {
             fs.writeFileSync(
                 `${__dirname}/src/init.ts`,
                 `
-                require('dotenv').config({ path: \`\${__dirname}/.env' })
+                require('dotenv').config({ path: '\${__dirname}/.env' })
             `.trim(),
                 { encoding: 'utf-8' },
             );
@@ -654,6 +766,45 @@ class OptionalPackages {
     }
 }
 
+class FeaturePacks {
+    /** @type import('./configure-package.d.ts').Feature[] */
+    features = [];
+
+    constructor() {
+        this.features = loadFeatures();
+    }
+
+    /** @param {import('./configure-package.d.ts').Feature} feature */
+    addFeature(feature) {
+        // const pkg = new PackageFile();
+
+        // for (const script in feature.scripts) {
+        //     pkg.addScript(script, feature.scripts[script]);
+        // }
+
+        // pkg.save();
+
+        // if (Object.values(feature.packages.dependencies).length) {
+        //     runCommand(`npm install ${feature.packages.dependencies.join(' ')}`, { cwd: __dirname, stdio: 'inherit' });
+        // }
+
+        // if (Object.values(feature.packages.devDependencies).length) {
+        //     runCommand(`npm install ${feature.packages.devDependencies.join(' ')} -D`, { cwd: __dirname, stdio: 'inherit' });
+        // }
+
+        copyDirectory(feature.path, __dirname, [feature.featureScript]);
+    }
+
+    async run() {
+        for (const feature of Object.values(this.features)) {
+            const result = await askBooleanQuestion(feature.info.prompt, false);
+            if (result) {
+                this.addFeature(feature);
+            }
+        }
+    }
+}
+
 async function configureOptionalFeatures() {
     await new Features().run();
 }
@@ -677,6 +828,9 @@ const lintAndFormatSourceFiles = () => {
 };
 
 const run = async function () {
+    await new FeaturePacks().run();
+    process.exit(0);
+
     await populatePackageInfo();
     await configureOptionalFeatures();
 
@@ -696,6 +850,7 @@ const run = async function () {
     try {
         removeTemplateReadmeText();
         removeAssetsDirectory();
+        removeFeaturesDirectory();
     } catch (e) {
         console.log('Error removing template assets: ', e);
     }
@@ -703,6 +858,7 @@ const run = async function () {
     try {
         processFiles(__dirname, packageInfo);
         installDependencies();
+        await new FeaturePacks().run();
         await new OptionalPackages().run();
         lintAndFormatSourceFiles();
     } catch (err) {

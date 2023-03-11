@@ -4,22 +4,34 @@ const getServerlessPort = name => {
     return 3000 + (hash % 7000) + portAddition;
 };
 
-const packages = [
-    'serverless',
-    'serverless-api-compression',
-    'serverless-prune-plugin',
-    'serverless-offline',
-    'serverless-bundle'
-];
+const info = {
+    name: 'serverless',
+    description: 'Serverless framework',
+    prompt: 'Do you want to use the serverless framework?',
+};
+
+const packages = {
+    /** @type string[] */
+    dependencies: [],
+    /** @type string[] */
+    devDependencies: [
+        'serverless',
+        'serverless-api-compression',
+        'serverless-prune-plugin',
+        'serverless-offline',
+        'serverless-bundle'
+    ],
+};
 
 const scripts = {
     'serve:dev': `serverless offline start --httpPort ${getServerlessPort('{{package.name}}')}`,
     deploy: 'serverless deploy',
 };
 
-module.exports = {
+const feature = {
+    info,
     packages,
     scripts,
 };
 
-console.log(scripts);
+module.exports = {feature,};
