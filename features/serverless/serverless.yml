@@ -1,0 +1,57 @@
+frameworkVersion: '3'
+
+service: '{{package.name}}'
+app: '{{package.name}}'
+org: '{{package.vendor.github}}'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: us-east-1
+  timeout: 10
+  deploymentMethod: direct
+  versionFunctions: false
+  httpApi:
+    cors: true
+  apiGateway:
+    minimumCompressionSize: 1024
+
+package:
+  patterns:
+    - '!./**'
+    - ./src/**
+  individually: false
+  excludeDevDependencies: true
+
+plugins:
+  - serverless-api-compression
+  - serverless-prune-plugin
+  - serverless-offline
+  - serverless-bundle
+
+custom:
+  bundle:
+    sourcemaps: false
+    linting: false
+    disableForkTsChecker: true
+    stats: false
+  prune:
+    automatic: true
+    number: 2
+  contentCompression: 1024
+
+functions:
+  get-users:
+    handler: src/handlers/get-users.handler
+    events:
+      - httpApi:
+          path: /users
+          method: GET
+
+  get-articles:
+    handler: src/handlers/get-articles.handler
+    events:
+      - httpApi:
+          path: /articles
+          method: GET
