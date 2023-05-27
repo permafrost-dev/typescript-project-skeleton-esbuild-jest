@@ -1,14 +1,12 @@
 /**
  * configures a package created from the template.
  */
-
-const { basename } = require('path');
 const cp = require('child_process');
 const fs = require('fs');
 const https = require('https');
+const path = require('path');
 const readline = require('readline');
 const util = require('util');
-const path = require('path');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -16,8 +14,6 @@ const rl = readline.createInterface({
 });
 
 const question = util.promisify(rl.question).bind(rl);
-
-const basePath = __dirname;
 
 const packageInfo = {
     name: '',
@@ -33,23 +29,76 @@ const packageInfo = {
     },
 };
 
-const runCommand = str => {
-    cp.execSync(str, { cwd: __dirname, encoding: 'utf-8', stdio: 'inherit' });
-};
+const ANSI_BRIGHT_BLUE = '\x1b[94m';
+const ANSI_BRIGHT_GREEN = '\x1b[92m';
+const ANSI_BRIGHT_RED = '\x1b[91m';
+const ANSI_BRIGHT_WHITE = '\x1b[97m';
+const ANSI_BRIGHT_YELLOW = '\x1b[93m';
+const ANSI_RESET = '\x1b[0m';
 
-const gitCommand = command => {
-    return cp.execSync(`git ${command}`, { env: process.env, cwd: __dirname, encoding: 'utf-8', stdio: 'pipe' }) || '';
-};
+const colorString = (str, color) => color + str + ANSI_RESET;
+const blue = str => colorString(str, ANSI_BRIGHT_BLUE);
+const green = str => colorString(str, ANSI_BRIGHT_GREEN);
+const red = str => colorString(str, ANSI_BRIGHT_RED);
+const white = str => colorString(str, ANSI_BRIGHT_WHITE);
+const yellow = str => colorString(str, ANSI_BRIGHT_YELLOW);
 
-const installDependencies = () => {
-    cp.execSync('npm install', { cwd: __dirname, encoding: 'utf-8', stdio: 'inherit' });
-};
+class Stdout {
+    write(text) {
+        process.stdout.write(text);
+    }
+    writeln(text) {
+        this.write(text + '\n');
+    }
+}
 
+const stdout = new Stdout();
+
+const runCommand = str => cp.execSync(str, { cwd: __dirname, encoding: 'utf-8', stdio: 'inherit' });
+const gitCommand = command => cp.execSync(`git ${command}`, { env: process.env, cwd: __dirname, encoding: 'utf-8', stdio: 'pipe' }) || '';
+const safeUnlink = path => fs.existsSync(path) && fs.unlinkSync(path);
+const getWorkflowFilename = name => `${__dirname}/.github/workflows/${name}.yml`;
+const getGithubConfigFilename = name => `${__dirname}/.github/${name}.yml`;
+const writeFormattedJson = (filename, data) => fs.writeFileSync(filename, JSON.stringify(data, null, 4), { encoding: 'utf-8' });
+const isAnswerYes = answer => answer.toLowerCase().trim().startsWith('y');
+
+/**
+ * determine if a path is a directory.
+ * @param {string} path
+ * @returns {boolean} true if the path is a directory, false otherwise
+ */
+function is_dir(path) {
+    try {
+        return fs.lstatSync(path).isDirectory();
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * determine if a path is a file.
+ * @param {string} path
+ * @returns {boolean} true if the path is a file, false otherwise
+ */
+function is_file(path) {
+    try {
+        return fs.lstatSync(path).isFile();
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * prompt the user to answer a question, returning defaultValue if no answer is given.
+ * @param {string} prompt
+ * @param {string} defaultValue
+ * @returns string
+ */
 const askQuestion = async (prompt, defaultValue = '') => {
     let result = '';
 
     try {
-        result = await question(`${prompt} ${defaultValue.length ? '(' + defaultValue + ') ' : ''}`);
+        result = await question(`» ${prompt} ${defaultValue.length ? '(' + defaultValue + ') ' : ''}`);
     } catch (err) {
         result = false;
     }
@@ -63,6 +112,57 @@ const askQuestion = async (prompt, defaultValue = '') => {
     });
 };
 
+/**
+ * ask a yes or no question
+ * @param {string} str
+ * @param {boolean} defaultAnswer
+ * @returns {boolean} true or false
+ */
+const askBooleanQuestion = async (str, defaultAnswer = true) => {
+    const suffix = defaultAnswer ? '[Y/n]' : '[y/N]';
+    const resultStr = (await askQuestion(`${str} ${suffix} `)).toString().trim();
+
+    if (!resultStr.length) {
+        return defaultAnswer;
+    }
+
+    return isAnswerYes(resultStr);
+};
+
+/**
+ * conditionally ask a question based on the value of a property in an object, and update the object's property value.
+ * @param {object} obj
+ * @param {string} propName
+ * @param {boolean} onlyEmpty
+ * @param {string} prompt
+ * @param {boolean} allowEmpty
+ * @param {boolean} alwaysAsk
+ * @returns void
+ */
+const conditionalAsk = async (obj, propName, onlyEmpty, prompt, allowEmpty = false, alwaysAsk = true) => {
+    const value = obj[propName];
+
+    if (!onlyEmpty || !value.length || alwaysAsk) {
+        while (obj[propName].length === 0 || alwaysAsk) {
+            obj[propName] = await askQuestion(prompt, value);
+
+            if (allowEmpty && obj[propName].length === 0) {
+                break;
+            }
+
+            if (obj[propName].length > 0) {
+                break;
+            }
+        }
+    }
+
+    return new Promise(resolve => resolve());
+};
+
+/**
+ * get a github api endpoint and return the response.
+ * @param {string} endpoint
+ */
 async function getGithubApiEndpoint(endpoint) {
     const url = `https://api.github.com/${endpoint}`.replace('//', '/');
 
@@ -138,6 +238,10 @@ function searchCommitsForGithubUsername() {
     return committers[0].email.split('@')[0];
 }
 
+/**
+ * try to guess the current user's github username.
+ * @returns {string} the github username
+ */
 function guessGithubUsername() {
     const username = searchCommitsForGithubUsername();
 
@@ -148,26 +252,106 @@ function guessGithubUsername() {
     return getGithubUsernameFromGitRemote();
 }
 
-function rescue(func, defaultValue = null) {
-    try {
-        return func();
-    } catch (e) {
-        return defaultValue;
+/**
+ * Removes the template README text from the README.md file
+ */
+function removeTemplateReadmeText() {
+    const END_BLOCK_STR = '<!-- ==END TEMPLATE README== -->';
+    const START_BLOCK_STR = '<!-- ==START TEMPLATE README== -->';
+
+    const content = fs.readFileSync(`${__dirname}/README.md`).toString();
+
+    if (content.includes(START_BLOCK_STR) && content.includes(END_BLOCK_STR)) {
+        const startBlockPos = content.indexOf(START_BLOCK_STR);
+        const endBlockPos = content.lastIndexOf(END_BLOCK_STR);
+
+        const newContent = content.replace(content.substring(startBlockPos, endBlockPos + END_BLOCK_STR.length), '');
+
+        if (newContent.length) {
+            fs.writeFileSync('./README.md', newContent);
+        }
     }
 }
 
-function is_dir(path) {
+function removeAssetsDirectory() {
     try {
-        const stat = fs.lstatSync(path);
-        return stat.isDirectory();
+        removeDirectory(`${__dirname}/assets`);
+        fs.rmdirSync(`${__dirname}/assets`);
     } catch (e) {
-        // lstatSync throws an error if path doesn't exist
-        return false;
+        //
     }
 }
 
-function is_file(path) {
-    return rescue(() => fs.lstatSync(path).isFile(), false);
+function removeFeaturesDirectory() {
+    try {
+        removeDirectory(`${__dirname}/features`);
+        fs.rmdirSync(`${__dirname}/features`);
+    } catch (e) {
+        //
+    }
+}
+
+/**
+ * recursively copy a source directory to a destination directory
+ * @param {string} src
+ * @param {string} dest
+ * @param {string[]} ignores
+ */
+function copyDirectory(src, dest, ignores = []) {
+    // Create destination directory if it doesn't exist
+    if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest);
+    }
+
+    const files = fs.readdirSync(src);
+
+    for (const file of files) {
+        const filePath = path.join(src, file);
+        const destPath = path.join(dest, file);
+
+        if (ignores.includes(filePath) || ignores.includes(file)) {
+            continue;
+        }
+
+        if (fs.lstatSync(filePath).isDirectory()) {
+            if (!fs.existsSync(destPath)) {
+                fs.mkdirSync(destPath, { recursive: true });
+            }
+            // Recursively copy directory
+            copyDirectory(filePath, destPath, ignores);
+        } else {
+            fs.copyFileSync(filePath, destPath);
+        }
+    }
+}
+
+/**
+ * recursively remove a directory
+ * @param {string} src
+ * @returns void
+ */
+function removeDirectory(src) {
+    if (!fs.existsSync(src)) {
+        return;
+    }
+
+    const files = fs.readdirSync(src);
+
+    if (files.length === 0) {
+        fs.rmdirSync(src);
+        return;
+    }
+
+    for (const file of files) {
+        const filePath = path.join(src, file);
+
+        if (fs.lstatSync(filePath).isDirectory()) {
+            // Recursively remove directories
+            removeDirectory(filePath);
+        } else {
+            fs.unlinkSync(filePath);
+        }
+    }
 }
 
 const replaceVariablesInFile = (filename, packageInfo) => {
@@ -186,12 +370,12 @@ const replaceVariablesInFile = (filename, packageInfo) => {
         .replace(/\{\{date\.year\}\}/g, new Date().getFullYear())
         .replace('Template Setup: run `node configure-package.js` to configure.\n', '');
 
-    if (originalContent != content) {
+    if (originalContent !== content) {
         fs.writeFileSync(filename, content, { encoding: 'utf-8' });
     }
 };
 
-const processFiles = (directory, packageInfo) => {
+const processFiles = directory => {
     const files = fs.readdirSync(directory).filter(f => {
         return ![
             '.',
@@ -204,57 +388,42 @@ const processFiles = (directory, packageInfo) => {
             '.gitignore',
             '.prettierignore',
             '.prettierrc',
+            'assets',
             'build-library.js',
             'build.js',
             'configure-package.js',
+            'feature.js',
             'node_modules',
             'package-lock.json',
             'prettier.config.js',
             'yarn.lock',
-        ].includes(basename(f));
+        ].includes(path.basename(f));
     });
 
     files.forEach(fn => {
         const fqName = `${directory}/${fn}`;
-        const relativeName = fqName.replace(basePath + '/', '');
+        const relativeName = fqName.replace(__dirname + '/', '');
         const isPath = is_dir(fqName);
-        const kind = isPath ? 'directory' : 'file';
 
-        console.log(`processing ${kind} ./${relativeName}`);
-
-        if (isPath) {
-            processFiles(fqName, packageInfo);
-            return;
-        }
+        stdout.write(`» processing ${isPath ? 'directory' : 'file'} ./${relativeName}...`);
 
         if (is_file(fqName)) {
             try {
                 replaceVariablesInFile(fqName, packageInfo);
+                stdout.write(green(`done`));
             } catch (err) {
-                console.log(`error processing file ${relativeName}`);
+                stdout.write(red(`error`));
+            } finally {
+                stdout.writeln('');
             }
+        } else if (isPath) {
+            stdout.writeln('');
+            processFiles(fqName);
+            return;
+        } else {
+            stdout.writeln('');
         }
     });
-};
-
-const conditionalAsk = async (obj, propName, onlyEmpty, prompt, allowEmpty = false, alwaysAsk = true) => {
-    const value = obj[propName];
-
-    if (!onlyEmpty || !value.length || alwaysAsk) {
-        while (obj[propName].length === 0 || alwaysAsk) {
-            obj[propName] = await askQuestion(prompt, value);
-
-            if (allowEmpty && obj[propName].length === 0) {
-                break;
-            }
-
-            if (obj[propName].length > 0) {
-                break;
-            }
-        }
-    }
-
-    return new Promise(resolve => resolve());
 };
 
 const populatePackageInfo = async (onlyEmpty = false) => {
@@ -262,15 +431,15 @@ const populatePackageInfo = async (onlyEmpty = false) => {
 
     console.log();
 
-    packageInfo.name = basename(__dirname);
+    packageInfo.name = path.basename(__dirname);
     packageInfo.author.name = gitCommand('config user.name').trim();
     packageInfo.author.email = gitCommand('config user.email').trim();
     packageInfo.vendor.name = packageInfo.author.name;
     packageInfo.author.github = guessGithubUsername();
     packageInfo.vendor.github = remoteUrlParts[1];
 
+    // check if the guessed vendor is a github org, and if so, use the org name
     const orgResponse = await getGithubApiEndpoint(`orgs/${packageInfo.vendor.github}`);
-
     if (orgResponse.exists) {
         packageInfo.vendor.name = orgResponse.data.name;
     }
@@ -291,11 +460,6 @@ const populatePackageInfo = async (onlyEmpty = false) => {
         packageInfo.vendor.github = packageInfo.author.github;
     }
 };
-
-const safeUnlink = path => fs.existsSync(path) && fs.unlinkSync(path);
-const getWorkflowFilename = name => `${__dirname}/.github/workflows/${name}.yml`;
-const getGithubConfigFilename = name => `${__dirname}/.github/${name}.yml`;
-const writeFormattedJson = (filename, data) => fs.writeFileSync(filename, JSON.stringify(data, null, 4), { encoding: 'utf-8' });
 
 class PackageFile {
     pkg = {};
@@ -439,7 +603,7 @@ class Features {
             pkg.deleteScripts('test:coverage').replaceScript('test', 'echo "no tests defined" && exit 0').save();
 
             // remove tsconfig jest types reference
-            let tsConfigContent = fs.readFileSync('${__dirname}/tsconfig.json').toString();
+            let tsConfigContent = fs.readFileSync(`${__dirname}/tsconfig.json`).toString();
 
             tsConfigContent = tsConfigContent.replace(/"jest",?\s*/, '');
             fs.writeFileSync(`${__dirname}/tsconfig.json`, tsConfigContent, { encoding: 'utf-8' });
@@ -494,8 +658,6 @@ class Features {
             const pkg = new PackageFile();
 
             pkg.delete('bin').save();
-
-            //this.useCommanderPackage.disable();
         },
     };
 
@@ -532,111 +694,6 @@ class Features {
             if (!feature.enabled) {
                 feature.disable();
             }
-        }
-    }
-}
-
-/**
- * Removes the template README text from the README.md file
- */
-function removeTemplateReadmeText() {
-    const END_BLOCK_STR = '<!-- ==END TEMPLATE README== -->';
-    const START_BLOCK_STR = '<!-- ==START TEMPLATE README== -->';
-
-    const content = fs.readFileSync(`${__dirname}/README.md`).toString();
-
-    if (content.includes(START_BLOCK_STR) && content.includes(END_BLOCK_STR)) {
-        const startBlockPos = content.indexOf(START_BLOCK_STR);
-        const endBlockPos = content.lastIndexOf(END_BLOCK_STR);
-
-        const newContent = content.replace(content.substring(startBlockPos, endBlockPos + END_BLOCK_STR.length), '');
-
-        if (newContent.length) {
-            fs.writeFileSync('./README.md', newContent);
-        }
-    }
-}
-
-function removeAssetsDirectory() {
-    try {
-        for (const fn of fs.readdirSync(`${__dirname}/assets`)) {
-            fs.unlinkSync(`${__dirname}/assets/${fn}`);
-        }
-
-        fs.rmdirSync(`${__dirname}/assets`);
-    } catch (e) {
-        //
-    }
-}
-
-function removeFeaturesDirectory() {
-    try {
-        removeDirectory(`${__dirname}/features`);
-        fs.rmdirSync(`${__dirname}/features`);
-    } catch (e) {
-        //
-    }
-}
-
-/**
- * recursively copy a source directory to a destination directory
- * @param {string} src
- * @param {string} dest
- * @param {string[]} ignores
- */
-function copyDirectory(src, dest, ignores = []) {
-    // Create destination directory if it doesn't exist
-    if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest);
-    }
-
-    const files = fs.readdirSync(src);
-
-    for (const file of files) {
-        const filePath = path.join(src, file);
-        const destPath = path.join(dest, file);
-
-        if (ignores.includes(filePath) || ignores.includes(file)) {
-            continue;
-        }
-
-        if (fs.lstatSync(filePath).isDirectory()) {
-            if (!fs.existsSync(destPath)) {
-                fs.mkdirSync(destPath, { recursive: true });
-            }
-            // Recursively copy directory
-            copyDirectory(filePath, destPath, ignores);
-        } else {
-            fs.copyFileSync(filePath, destPath);
-        }
-    }
-}
-
-/**
- * recursively remove a directory
- * @param {string} src
- * @returns void
- */
-function removeDirectory(src) {
-    if (!fs.existsSync(src)) {
-        return;
-    }
-
-    const files = fs.readdirSync(src);
-
-    if (files.length === 0) {
-        fs.rmdirSync(src);
-        return;
-    }
-
-    for (const file of files) {
-        const filePath = path.join(src, file);
-
-        if (fs.lstatSync(filePath).isDirectory()) {
-            // Recursively remove directories
-            removeDirectory(filePath);
-        } else {
-            fs.unlinkSync(filePath);
         }
     }
 }
@@ -793,6 +850,8 @@ class FeaturePacks {
         }
 
         copyDirectory(feature.path, __dirname, [feature.featureScript]);
+
+        stdout.writeln(green('✓') + ` Added feature: ${feature.info.name}`);
     }
 
     async run() {
@@ -809,53 +868,27 @@ async function configureOptionalFeatures() {
     await new Features().run();
 }
 
-const askBooleanQuestion = async (str, defaultAnswer = true) => {
-    const suffix = defaultAnswer ? '[Y/n]' : '[y/N]';
-    let resultStr = await askQuestion(`${str} ${suffix} `);
-    resultStr = resultStr.toString().trim();
-
-    if (resultStr.length === 0) {
-        resultStr = defaultAnswer ? 'yes' : 'no';
-    }
-
-    const result = resultStr.toLowerCase().replace(/ /g, '').replace(/[^yn]/g, '').slice(0, 1);
-
-    return result === 'y';
-};
-
 const lintAndFormatSourceFiles = () => {
-    cp.execSync('node ./node_modules/.bin/prettier --write ./src', { cwd: __dirname, stdio: 'inherit' });
-    cp.execSync('node ./node_modules/.bin/eslint --fix ./src', { cwd: __dirname, stdio: 'inherit' });
+    cp.execSync('node ./node_modules/.bin/prettier --write src', { cwd: __dirname, stdio: 'inherit' });
+    cp.execSync('node ./node_modules/.bin/eslint --fix src', { cwd: __dirname, stdio: 'inherit' });
 };
 
 const run = async function () {
     await populatePackageInfo();
     await configureOptionalFeatures();
 
-    const confirm = (await askQuestion('Process files (this will modify files) [y/N]? '))
-        .toString()
-        .toLowerCase()
-        .replace(/ /g, '')
-        .replace(/[^yn]/g, '')
-        .slice(0, 1);
+    stdout.writeln('');
+    const confirm = (await askQuestion(yellow('Process files') + ' (this will modify files) [y/N]? ')).toString();
 
-    if (confirm !== 'y') {
-        console.log('Not processing files: action canceled.  Exiting.');
+    if (!isAnswerYes(confirm)) {
+        stdout.writeln('» ' + yellow('Not processing files: action canceled.  Exiting.'));
         rl.close();
         return;
     }
 
     try {
-        removeTemplateReadmeText();
-        removeAssetsDirectory();
-        removeFeaturesDirectory();
-    } catch (e) {
-        console.log('Error: ', e);
-    }
-
-    try {
-        processFiles(__dirname, packageInfo);
-        installDependencies();
+        processFiles(__dirname);
+        runCommand('npm install');
     } catch (err) {
         console.log('Error: ', err);
     }
@@ -874,19 +907,30 @@ const run = async function () {
     }
 
     try {
-        console.log('Done, removing this script.');
+        removeTemplateReadmeText();
+        removeAssetsDirectory();
+        removeFeaturesDirectory();
+    } catch (e) {
+        console.log('Error: ', e);
+    }
+
+    try {
+        stdout.write('» ' + yellow('Removing this script...'));
         fs.unlinkSync(__filename);
         fs.unlinkSync('./configure-package.d.ts');
-    } catch (e) {
-        console.log('Error removing script: ', e);
+        stdout.writeln('done.');
+    } catch (err) {
+        console.log('Error removing script: ', err);
     }
 
     try {
         runCommand('git add .');
         runCommand('git commit -m"commit configured package files"');
-    } catch (e) {
-        console.log('Error committing files: ', e);
+    } catch (err) {
+        console.log('Error committing files: ', err);
     }
+
+    stdout.writeln(green('✓') + ' Done.');
 
     rl.close();
 };
