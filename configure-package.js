@@ -441,7 +441,7 @@ const populatePackageInfo = async (onlyEmpty = false) => {
     // check if the guessed vendor is a github org, and if so, use the org name
     const orgResponse = await getGithubApiEndpoint(`orgs/${packageInfo.vendor.github}`);
     if (orgResponse.exists) {
-        packageInfo.vendor.name = orgResponse.data.name;
+        packageInfo.vendor.name = orgResponse.data.name ?? orgResponse.data.login;
     }
 
     await conditionalAsk(packageInfo, 'name', onlyEmpty, 'package name?', false);
