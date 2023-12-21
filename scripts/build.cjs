@@ -1,19 +1,13 @@
-import esbuild from 'esbuild';
-import { execSync, spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { basename, resolve } from 'node:path';
+const { basename } = require('path');
+//const { esbuildPluginDecorator } = require('esbuild-plugin-decorator');
+const {
+    realpathSync, readFileSync, writeFileSync, renameSync, existsSync
+} = require('fs');
+const { spawnSync, execSync } = require('child_process');
+const esbuild = require('esbuild');
 
-import pkg from '../package.json';
-
-const platformToTarget = platform => {
-    return `${platform.name}${platform.version}`;
-};
-
-const isValidFormat = format => [ 'esm', 'cjs', 'iife' ].includes(format);
-
-/** @type { import('esbuild').BuildOptions } */
 const buildConfig = {
-    basePath: resolve(import.meta.url, '..'),
+    basePath: `${__dirname}/..`,
     bundle: true,
     constants: {},
     entry: 'src/index.ts',
@@ -26,13 +20,13 @@ const buildConfig = {
     },
 };
 
+const pkg = require(realpathSync(`${buildConfig.basePath}/package.json`, { encoding: 'utf-8' }));
+
 class Builder {
     config = {
         binaries: false,
         production: false,
         verbose: false,
-        esm: false,
-        cjs: false,
     };
 
     write(msg) {
@@ -60,14 +54,14 @@ class Builder {
             minify: buildConfig.minify,
             outdir: buildConfig.outdir,
             platform: buildConfig.platform.name,
+            experimentalOptimizeImports: true,
             plugins: [
                 // esbuildPluginDecorator({
-                //   compiler: 'tsc',
-                //   tsconfigPath: `${buildConfig.basePath}/tsconfig.json`,
+                //     compiler: 'tsc',
+                //     tsconfigPath: `${buildConfig.basePath}/tsconfig.json`,
                 // }),
             ],
-            target: platformToTarget(buildConfig.platform),
-            experimentalOptimizeImports: true,
+            target: `${buildConfig.platform.name}${buildConfig.platform.version}`,
         });
 
         return new Promise(resolve => resolve(result));
@@ -82,14 +76,12 @@ class Builder {
         results.warnings.forEach(msg => this.writeln(`* Warning: ${msg}`));
 
         Object.keys(results.metafile.outputs).forEach(fn => {
-            this.writeln(`* » created '${fn}' (${this.sizeForDisplay(results.metafile.outputs[fn].bytes)})`);
+            this.writeln(`*   » created '${fn}' (${this.sizeForDisplay(results.metafile.outputs[fn].bytes)})`);
         });
     }
 
     processArgv() {
         const argMap = {
-            '--esm': { name: 'esm', value: true },
-            '--cjs': { name: 'cjs', value: true },
             '--binaries': { name: 'binaries', value: true },
             '--prod': { name: 'production', value: true },
             '--production': { name: 'production', value: true },
@@ -98,40 +90,13 @@ class Builder {
             '-v': { name: 'verbose', value: true },
         };
 
-        const setConfigOutputFormat = format => {
-            if (!isValidFormat(format)) {
-                return;
-            }
-
-            this.config.esm = format === 'esm';
-            this.config.cjs = format === 'cjs';
-        };
-
-        const getFormatType = () => {
-            const key = Object.keys(this.config)
-                .filter(key => isValidFormat(key))
-                .filter(key => this.config[key] === true)
-                .shift();
-
-            if (typeof key !== 'undefined' && isValidFormat(key)) {
-                return key;
-            }
-
-            return buildConfig.format;
-        };
-
         process.argv
             .slice(2)
             .map(arg => {
                 const hasMappedArg = typeof argMap[arg] === 'undefined';
                 return hasMappedArg ? { name: arg.replace(/^-+/, ''), value: true } : argMap[arg];
             })
-            .forEach(data => {
-                if ([ 'esm', 'cjs' ].includes(data.name)) setConfigOutputFormat(data.name);
-            })
             .forEach(data => (this.config[data.name] = data.value));
-
-        buildConfig.format = getFormatType();
 
         console.log(this.config);
     }
@@ -143,9 +108,7 @@ class Builder {
         const contents = readFileSync(`${buildConfig.outdir}/${filename}`, { encoding: 'utf-8' });
 
         spawnSync('chmod', [ '+x', `${buildConfig.outdir}/${filename}` ], { stdio: 'ignore' });
-
         writeFileSync(`${buildConfig.outdir}/${filename}`, `#!/usr/bin/node\n\n${contents}`, { encoding: 'utf-8' });
-
         renameSync(`${buildConfig.outdir}/${filename}`, `${buildConfig.outdir}/${newFilename}`);
 
         if (existsSync(binaryFilename)) {
