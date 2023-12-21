@@ -1,9 +1,11 @@
 import esbuild from 'esbuild';
 import { execSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { basename, join, dirname } from 'node:path';
+import { createRequire } from 'node:module';
+import { basename, dirname, join } from 'node:path';
 
-import pkg from '../package.json' assert { type: 'json' };
+const require = createRequire(import.meta.url);
+const pkg = require('../package.json');
 
 const platformToTarget = platform => `${platform.name}${platform.version}`;
 const isValidFormat = format => [ 'esm', 'cjs', 'iife' ].includes(format);
