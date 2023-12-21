@@ -15,7 +15,7 @@ export async function handler(event: any, context: any) {
         ],
     });
 
-    const headers = {'content-length': body.length,};
+    const headers = { 'content-length': body.length };
 
     return { body, headers, statusCode: 200 };
 }

@@ -19,17 +19,12 @@ module.exports = {
             files: [ '.eslintrc.js', 'jest.config.js' ],
             rules: {
                 'sort-keys': 'off',
-                'array-element-newline': [ 'warn', { multiline: true, minItems: 4 }],
+                'array-element-newline': 'off', //['warn', { multiline: true, minItems: 6 }],
             },
         },
     ],
     plugins: [ 'jest' ],
-    extends: [
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:jest/recommended',
-        'plugin:node/recommended'
-    ],
+    extends: [ 'eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:jest/recommended', 'plugin:node/recommended' ],
     rules: {
         '@typescript-eslint/ban-ts-comment': 'off',
         '@typescript-eslint/explicit-function-return-type': 'off',
@@ -47,15 +42,17 @@ module.exports = {
         'node/no-process-exit': 'off',
         'node/no-unpublished-require': 'off',
         'node/no-unsupported-features/es-syntax': 'off',
-        'array-bracket-newline': [ 'warn', { multiline: true, minItems: 4 }],
+        'array-bracket-newline': [ 'warn', { multiline: true, minItems: 6 }],
         'array-bracket-spacing': [ 'warn', 'always', { objectsInArrays: false }],
-        'array-element-newline': [ 'warn', { multiline: true, minItems: 3 }],
+        'array-element-newline': [ 'warn', { multiline: true, minItems: 6 }],
         'eqeqeq': [ 'error', 'smart' ],
         'indent': [ 'warn', 4, { SwitchCase: 1 }],
         'no-eval': 'error',
         'no-var': 'error',
-        'object-curly-newline': [ 'warn', { ObjectExpression: { multiline: true, minProperties: 4 }, ObjectPattern: { multiline: true, minProperties: 4 }, ImportDeclaration: 'never' },],
-        'sort-keys': [ 'warn', 'asc', { caseSensitive: false, minKeys: 5, natural: true }],
+        'object-curly-newline': [
+            'warn',
+            { ObjectExpression: { multiline: true, minProperties: 4 }, ObjectPattern: { multiline: true, minProperties: 4 }, ImportDeclaration: 'never' },
+        ],
     },
-    ignorePatterns: [ 'dist/*', 'configure-package.js' ],
+    ignorePatterns: [ 'dist/*', 'node_modules/*', '.vscode/*', 'configure-package.js' ],
 };

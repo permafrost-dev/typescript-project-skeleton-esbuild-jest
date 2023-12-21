@@ -14,13 +14,7 @@ const packages = {
     /** @type string[] */
     dependencies: [],
     /** @type string[] */
-    devDependencies: [
-        'serverless',
-        'serverless-api-compression',
-        'serverless-prune-plugin',
-        'serverless-offline',
-        'serverless-bundle'
-    ],
+    devDependencies: [ 'serverless', 'serverless-api-compression', 'serverless-prune-plugin', 'serverless-offline', 'serverless-bundle' ],
 };
 
 const scripts = {
@@ -34,4 +28,4 @@ const feature = {
     scripts,
 };
 
-module.exports = {feature,};
+module.exports = { feature };
