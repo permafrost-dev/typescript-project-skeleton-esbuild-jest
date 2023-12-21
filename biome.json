@@ -1,0 +1,55 @@
+{
+    "$schema": "https://biomejs.dev/schemas/1.4.0/schema.json",
+    "files": {
+        "include": ["./*.cjs", "./*.js", "./*.mjs", "src/**/*.js", "src/**/*.ts"],
+        "ignore": [".vscode/**", ".idea/**", ".git/**", ".husky/**", "build/**", "configure-package.js", "dist/**", "node_modules/**", "scripts/**"]
+    },
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": false,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 155,
+        "lineEnding": "lf",
+        "ignore": ["package-lock.json", "bun.lockb", "node_modules/**", "dist/**", "build/**"]
+    },
+    "linter": {
+        "enabled": true,
+        "ignore": ["build/**", "configure-package.js", "dist/**", "node_modules/**", "scripts/**"],
+        "rules": {
+            "correctness": {
+                "noSwitchDeclarations": {
+                    "level": "warn"
+                }
+            },
+            "suspicious": {
+                "noExplicitAny": {
+                    "level": "off"
+                }
+            }
+        }
+    },
+    "javascript": {
+        "formatter": {
+            "arrowParentheses": "asNeeded",
+            "bracketSameLine": false,
+            "bracketSpacing": true,
+            "indentWidth": 4,
+            "indentStyle": "space",
+            "jsxQuoteStyle": "double",
+            "quoteProperties": "asNeeded",
+            "quoteStyle": "single",
+            "semicolons": "always",
+            "trailingComma": "all"
+        }
+    },
+    "json": {
+        "parser": {
+            "allowComments": true,
+            "allowTrailingCommas": false
+        }
+    },
+    "vcs": {
+        "useIgnoreFile": true
+    }
+}
