@@ -16,7 +16,7 @@ module.exports = {
     overrides: [
         { files: '*.d.ts', rules: { strict: [ 'error', 'never' ] } },
         {
-            files: [ '.eslintrc.js', 'jest.config.js' ],
+            files: [ '.eslintrc.cjs', '.eslintrc.js', 'jest.config.js' ],
             rules: {
                 'sort-keys': 'off',
                 'array-element-newline': 'off', //['warn', { multiline: true, minItems: 6 }],
@@ -40,6 +40,7 @@ module.exports = {
         'node/no-missing-import': 'off',
         'node/no-missing-require': 'off',
         'node/no-process-exit': 'off',
+        'node/no-unpublished-import': 'off',
         'node/no-unpublished-require': 'off',
         'node/no-unsupported-features/es-syntax': 'off',
         'array-bracket-newline': [ 'warn', { multiline: true, minItems: 6 }],

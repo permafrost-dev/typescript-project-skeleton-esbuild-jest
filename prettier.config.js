@@ -2,28 +2,22 @@
 const overrides = {
     overrides: [
         {
-            files: ['*.yml', '*.yaml'],
-            options: {
-                tabWidth: 2,
-            },
+            files: [ '*.yml', '*.yaml' ],
+            options: {tabWidth: 2,},
         },
         {
             files: '.madgerc',
-            options: {
-                parser: 'json',
-            },
+            options: {parser: 'json',},
         },
         {
             files: '.eslintrc.js',
-            options: {
-                quoteProps: 'consistent',
-            },
+            options: {quoteProps: 'consistent',},
         },
     ],
 };
 
 /** @type {import('prettier').Options} */
-module.exports = {
+export default {
     arrowParens: 'avoid',
     bracketSameLine: true,
     bracketSpacing: true,

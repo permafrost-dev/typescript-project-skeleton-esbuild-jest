@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "{{package.description}}",
     "author": "{{package.author.name}} <{{package.author.email}}>",
+    "type": "module",
     "license": "MIT",
     "keywords": [
         "nodejs",
@@ -20,9 +21,9 @@
     "typings": "dist/index.d.ts",
     "lint-staged": {
         "*.{js,ts}": [
-            "biome format --write",
+            "biome format --no-errors-on-unmatched --write",
             "prettier --config prettier.config.js --write",
-            "eslint --fix"
+            "eslint --config .eslintrc.cjs --fix"
         ],
         "*.{css,gql,graphql,html,json,less,md,mdx,sass,scss}": [
             "prettier --config prettier.config.js --write"
@@ -37,15 +38,15 @@
         "analyze:deps:graph": "madge --extensions js,ts --image graph.svg --layout dot --ts-config tsconfig.json src/**",
         "test": "jest tests --verbose",
         "test:coverage": "jest tests --coverage",
-        "fmt": "biome format --write . && prettier --config prettier.config.js --write .",
-        "lint": "eslint --ext ts,js src/",
-        "lint:fix": "biome lint --apply-unsafe src/ && eslint --ext ts,js --fix src/",
+        "fmt": "biome format --no-errors-on-unmatched --write . && prettier --config prettier.config.js --write .",
+        "lint": "eslint --config .eslintrc.cjs --ext ts,js src/",
+        "lint:fix": "biome lint --apply-unsafe src/ && eslint --config .eslintrc.cjs --ext ts,js --fix src/",
         "lint:staged": "lint-staged",
         "fix": "npm run fmt && npm run lint:fix",
         "build:api-docs": "typedoc --plugin typedoc-plugin-markdown --out docs/api src/index.ts",
-        "build:dev": "node scripts/build.js",
-        "build:prod": "node scripts/build.js --production",
-        "build:binaries": "node scripts/build.js --binaries",
+        "build:dev": "node scripts/build.cjs",
+        "build:prod": "node scripts/build.cjs --production",
+        "build:binaries": "node scripts/build.cjs --binaries",
         "build:dts": "dts-bundle-generator -o dist/index.d.ts src/index.ts",
         "build": "npm run build:dev && npm run build:dts",
         "dev": "npm run build:dev && node dist/index.js",
