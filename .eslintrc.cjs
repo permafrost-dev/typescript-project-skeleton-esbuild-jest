@@ -46,8 +46,8 @@ module.exports = {
         'array-bracket-newline': [ 'warn', { multiline: true, minItems: 6 }],
         'array-bracket-spacing': [ 'warn', 'always', { objectsInArrays: false }],
         'array-element-newline': [ 'warn', { multiline: true, minItems: 6 }],
-        'eqeqeq': [ 'error', 'smart' ],
-        'indent': [ 'warn', 4, { SwitchCase: 1 }],
+        eqeqeq: [ 'error', 'smart' ],
+        indent: [ 'warn', 4, { SwitchCase: 1 }],
         'no-eval': 'error',
         'no-var': 'error',
         'object-curly-newline': [

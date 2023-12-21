@@ -1,19 +1,18 @@
 import esbuild from 'esbuild';
 import { execSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { basename, resolve } from 'node:path';
+import { basename, join, dirname } from 'node:path';
 
-import pkg from '../package.json';
+import pkg from '../package.json' assert { type: 'json' };
 
-const platformToTarget = platform => {
-    return `${platform.name}${platform.version}`;
-};
-
+const platformToTarget = platform => `${platform.name}${platform.version}`;
 const isValidFormat = format => [ 'esm', 'cjs', 'iife' ].includes(format);
+const parentDir = dir => dirname(dirname(dir));
+const projectPath = (...parts) => join(...[ parentDir(import.meta.url).replace('file://', ''), ...parts ]);
 
 /** @type { import('esbuild').BuildOptions } */
 const buildConfig = {
-    basePath: resolve(import.meta.url, '..'),
+    basePath: projectPath(),
     bundle: true,
     constants: {},
     entry: 'src/index.ts',
@@ -48,11 +47,7 @@ class Builder {
             absWorkingDir: buildConfig.basePath,
             allowOverwrite: true,
             bundle: buildConfig.bundle,
-            define: {
-                __APP_VERSION__: `'${pkg.version}'`,
-                __COMPILED_AT__: `'${new Date().toUTCString()}'`,
-                ...buildConfig.constants,
-            },
+            define: buildConfig.constants,
             entryPoints: [ buildConfig.entry ],
             format: buildConfig.format,
             logLevel: 'silent',
@@ -60,6 +55,7 @@ class Builder {
             minify: buildConfig.minify,
             outdir: buildConfig.outdir,
             platform: buildConfig.platform.name,
+            tsconfig: projectPath('tsconfig.json'),
             plugins: [
                 // esbuildPluginDecorator({
                 //   compiler: 'tsc',
@@ -67,7 +63,6 @@ class Builder {
                 // }),
             ],
             target: platformToTarget(buildConfig.platform),
-            experimentalOptimizeImports: true,
         });
 
         return new Promise(resolve => resolve(result));
@@ -120,16 +115,15 @@ class Builder {
             return buildConfig.format;
         };
 
-        process.argv
-            .slice(2)
-            .map(arg => {
-                const hasMappedArg = typeof argMap[arg] === 'undefined';
-                return hasMappedArg ? { name: arg.replace(/^-+/, ''), value: true } : argMap[arg];
-            })
-            .forEach(data => {
-                if ([ 'esm', 'cjs' ].includes(data.name)) setConfigOutputFormat(data.name);
-            })
-            .forEach(data => (this.config[data.name] = data.value));
+        const args = process.argv.slice(2).map(arg => {
+            const hasMappedArg = typeof argMap[arg] === 'undefined';
+            return hasMappedArg ? { name: arg.replace(/^-+/, ''), value: true } : argMap[arg];
+        });
+
+        args.forEach(data => {
+            if ([ 'esm', 'cjs' ].includes(data.name)) setConfigOutputFormat(data.name);
+        });
+        args.forEach(data => (this.config[data.name] = data.value));
 
         buildConfig.format = getFormatType();
 
