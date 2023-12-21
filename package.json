@@ -20,6 +20,7 @@
     "typings": "dist/index.d.ts",
     "lint-staged": {
         "*.{js,ts}": [
+            "biome format --write",
             "prettier --config prettier.config.js --write",
             "eslint --fix"
         ],
@@ -36,9 +37,9 @@
         "analyze:deps:graph": "madge --extensions js,ts --image graph.svg --layout dot --ts-config tsconfig.json src/**",
         "test": "jest tests --verbose",
         "test:coverage": "jest tests --coverage",
-        "fmt": "prettier --config prettier.config.js --write .",
+        "fmt": "biome format --write . && prettier --config prettier.config.js --write .",
         "lint": "eslint --ext ts,js src/",
-        "lint:fix": "eslint --ext ts,js --fix src/",
+        "lint:fix": "biome lint --apply-unsafe src/ && eslint --ext ts,js --fix src/",
         "lint:staged": "lint-staged",
         "fix": "npm run fmt && npm run lint:fix",
         "build:api-docs": "typedoc --plugin typedoc-plugin-markdown --out docs/api src/index.ts",
@@ -52,6 +53,7 @@
         "version": "auto-changelog -p -o CHANGELOG.md --hide-credit --release-summary --hide-empty-releases --sort-commits date-desc && git add CHANGELOG.md"
     },
     "devDependencies": {
+        "@biomejs/biome": "1.4.1",
         "@types/jest": "^29.5.11",
         "@types/node": "^20.10.5",
         "@typescript-eslint/eslint-plugin": "^6.15.0",
