@@ -57,7 +57,7 @@
         "@biomejs/biome": "1.8.3",
         "@types/jest": "^29.5.11",
         "@types/node": "^20.11.0",
-        "@typescript-eslint/eslint-plugin": "^7.0.0",
+        "@typescript-eslint/eslint-plugin": "^8.5.0",
         "@typescript-eslint/parser": "^7.1.0",
         "auto-changelog": "^2.4.0",
         "dts-bundle-generator": "^9.2.4",
