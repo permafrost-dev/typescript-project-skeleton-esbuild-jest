@@ -5,6 +5,8 @@ const tsConfigPaths = {
     '@tests/*': [ 'tests/*' ],
 };
 
+const currentDir = new URL('.', import.meta.url).pathname;
+
 /** @type {import('@jest/types').Config.InitialOptions } */
 export default {
     preset: 'ts-jest/presets/js-with-ts',
@@ -13,7 +15,7 @@ export default {
     testRegex: '(/__test__/.*|/tests/.*|(\\.|/)(test|spec))\\.[tj]sx?$',
     testPathIgnorePatterns: [ '/node_modules/', '/dist/' ],
     moduleFileExtensions: [ 'ts', 'tsx', 'js', 'jsx', 'json' ],
-    moduleNameMapper: pathsToModuleNameMapper(tsConfigPaths, { prefix: `${__dirname}/` }),
+    moduleNameMapper: pathsToModuleNameMapper(tsConfigPaths, { prefix: currentDir + '/' }),
 
     coverageDirectory: './coverage',
     coverageReporters: [ 'html', 'text' ],
