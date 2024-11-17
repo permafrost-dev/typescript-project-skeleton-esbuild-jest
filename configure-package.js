@@ -1,12 +1,12 @@
 /**
  * configures a package created from the template.
  */
-const cp = require('child_process');
-const fs = require('fs');
-const https = require('https');
-const path = require('path');
-const readline = require('readline');
-const util = require('util');
+import cp from 'node:child_process';
+import fs from 'node:fs';
+import https from 'node:https';
+import path from 'node:path';
+import readline from 'node:readline';
+import util from 'node:util';
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -55,12 +55,15 @@ class Stdout {
 const stdout = new Stdout();
 
 const runCommand = str => cp.execSync(str, { cwd: __dirname, encoding: 'utf-8', stdio: 'inherit' });
-const gitCommand = command => cp.execSync(`git ${command}`, { env: process.env, cwd: __dirname, encoding: 'utf-8', stdio: 'pipe' }) || '';
+const gitCommand = command => cp.execSync(`git ${command}`, {
+    env: process.env, cwd: __dirname, encoding: 'utf-8', stdio: 'pipe' 
+}) || '';
 const safeUnlink = path => fs.existsSync(path) && fs.unlinkSync(path);
 const getWorkflowFilename = name => `${__dirname}/.github/workflows/${name}.yml`;
 const getGithubConfigFilename = name => `${__dirname}/.github/${name}.yml`;
 const writeFormattedJson = (filename, data) => fs.writeFileSync(filename, JSON.stringify(data, null, 4), { encoding: 'utf-8' });
-const isAnswerYes = answer => answer.toLowerCase().trim().startsWith('y');
+const isAnswerYes = answer => answer.toLowerCase().trim()
+    .startsWith('y');
 
 /**
  * determine if a path is a directory.
@@ -217,12 +220,15 @@ async function getGithubApiEndpoint(endpoint) {
 }
 
 function getGithubUsernameFromGitRemote() {
-    const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
+    const remoteUrlParts = gitCommand('config remote.origin.url').trim()
+        .replace(':', '/')
+        .split('/');
     return remoteUrlParts[1];
 }
 
 function searchCommitsForGithubUsername() {
-    const authorName = gitCommand(`config user.name`).trim().toLowerCase();
+    const authorName = gitCommand(`config user.name`).trim()
+        .toLowerCase();
 
     const committers = gitCommand(`log --author='@users.noreply.github.com'  --pretty='%an:%ae' --reverse`)
         .split('\n')
@@ -427,7 +433,9 @@ const processFiles = directory => {
 };
 
 const populatePackageInfo = async (onlyEmpty = false) => {
-    const remoteUrlParts = gitCommand('config remote.origin.url').trim().replace(':', '/').split('/');
+    const remoteUrlParts = gitCommand('config remote.origin.url').trim()
+        .replace(':', '/')
+        .split('/');
 
     console.log();
 
@@ -512,9 +520,7 @@ class Features {
             const testsWorkflowFn = getWorkflowFilename('run-tests');
             const contents = fs.readFileSync(testsWorkflowFn, { encoding: 'utf-8' });
 
-            fs.writeFileSync(testsWorkflowFn, contents.replace('USE_CODECOV_SERVICE: yes', 'USE_CODECOV_SERVICE: no'), {
-                encoding: 'utf-8',
-            });
+            fs.writeFileSync(testsWorkflowFn, contents.replace('USE_CODECOV_SERVICE: yes', 'USE_CODECOV_SERVICE: no'), {encoding: 'utf-8',});
             safeUnlink(getGithubConfigFilename('codecov'));
         },
     };
@@ -548,7 +554,7 @@ class Features {
         prompt: 'Automerge Dependabot PRs?',
         enabled: true,
         default: true,
-        dependsOn: ['dependabot'],
+        dependsOn: [ 'dependabot' ],
         disable: () => {
             safeUnlink(getWorkflowFilename('dependabot-auto-merge'));
         },
@@ -600,7 +606,8 @@ class Features {
             safeUnlink(`${__dirname}/jest.config.js`);
 
             const pkg = new PackageFile();
-            pkg.deleteScripts('test:coverage').replaceScript('test', 'echo "no tests defined" && exit 0').save();
+            pkg.deleteScripts('test:coverage').replaceScript('test', 'echo "no tests defined" && exit 0')
+                .save();
 
             // remove tsconfig jest types reference
             let tsConfigContent = fs.readFileSync(`${__dirname}/tsconfig.json`).toString();
@@ -780,7 +787,7 @@ class OptionalPackages {
         dependsOn: [],
         name: 'dotenv',
         add: () => {
-            runCommand('npm', ['install', 'dotenv'], { cwd: __dirname, stdio: 'inherit' });
+            runCommand('npm', [ 'install', 'dotenv' ], { cwd: __dirname, stdio: 'inherit' });
 
             fs.mkdirSync(`${__dirname}/dist`, { recursive: true });
             fs.writeFileSync(`${__dirname}/dist/.env`, 'TEST_VALUE=1\n', { encoding: 'utf-8' });
@@ -805,7 +812,7 @@ class OptionalPackages {
         },
     };
 
-    optionalPackages = [this.config, this.dotenv];
+    optionalPackages = [ this.config, this.dotenv ];
 
     async run() {
         for (let pkg of this.optionalPackages) {
@@ -849,7 +856,7 @@ class FeaturePacks {
             runCommand(`npm install ${feature.packages.devDependencies.join(' ')} -D`, { cwd: __dirname, stdio: 'inherit' });
         }
 
-        copyDirectory(feature.path, __dirname, [feature.featureScript]);
+        copyDirectory(feature.path, __dirname, [ feature.featureScript ]);
 
         stdout.writeln(green('✓') + ` Added feature: ${feature.info.name}`);
     }
