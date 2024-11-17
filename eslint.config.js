@@ -13,16 +13,17 @@ const config = [
         ignores: [ 'node_modules', 'dist' ],
         env: { node: true },
         languageOptions: {
-            ecmaVersion: 2020,
+            ecmaVersion: 2022,
             sourceType: 'script',
             parser: tsParser,
             parserOptions: {
-                ecmaVersion: 2020,
+                ecmaVersion: 2022,
                 sourceType: 'module',
             },
             globals: {
                 ...globals.browser,
                 ...globals.node,
+                ...globals.jest,
                 ...globals.es2020,
             },
         },
@@ -69,8 +70,8 @@ const config = [
         },
     },
     new FlatESLint(),
-    {rules: jestPlugin.configs.recommended.rules,},
-    // nodePlugin.configs.recommended,
+    { rules: jestPlugin.configs.recommended.rules },
+    // {rules: nodePlugin.configs.recommended.rules},
 ];
 
 export default config;
