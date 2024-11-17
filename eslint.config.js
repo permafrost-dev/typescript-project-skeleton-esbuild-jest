@@ -9,7 +9,14 @@ import { FlatESLint } from '@typescript-eslint/utils/ts-eslint';
 /** @type {Linter.Config} */
 const config = [
     {
-        files: [ 'src/*.js', 'src/**/*.js', 'src/**/*.ts', 'src/*.ts' ],
+        files: [
+            'src/*.js',
+            'src/**/*.js',
+            'src/**/*.ts',
+            'src/*.ts',
+            'tests/**/*.ts',
+            'tests/*.ts'
+        ],
         ignores: [ 'node_modules', 'dist' ],
         languageOptions: {
             ecmaVersion: 2022,
