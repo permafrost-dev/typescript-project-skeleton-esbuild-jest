@@ -15,7 +15,7 @@ export default {
     testRegex: '(/__test__/.*|/tests/.*|(\\.|/)(test|spec))\\.[tj]sx?$',
     testPathIgnorePatterns: [ '/node_modules/', '/dist/' ],
     moduleFileExtensions: [ 'ts', 'tsx', 'js', 'jsx', 'json' ],
-    moduleNameMapper: pathsToModuleNameMapper(tsConfigPaths, { prefix: currentDir + '/' }),
+    moduleNameMapper: pathsToModuleNameMapper(tsConfigPaths, { prefix: currentDir }),
 
     coverageDirectory: './coverage',
     coverageReporters: [ 'html', 'text' ],
