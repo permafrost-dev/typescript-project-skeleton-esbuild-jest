@@ -11,7 +11,7 @@ const config = [
     {
         files: [ 'src/*.js', 'src/**/*.js', 'src/**/*.ts', 'src/*.ts' ],
         ignores: [ 'node_modules', 'dist' ],
-        env: {node: true,},
+        env: { node: true },
         languageOptions: {
             ecmaVersion: 2020,
             sourceType: 'script',
@@ -69,8 +69,7 @@ const config = [
         },
     },
     new FlatESLint(),
-    // tsPlugin.configs.recommended,
-    // jestPlugin.configs.recommended,
+    {rules: jestPlugin.configs.recommended.rules,},
     // nodePlugin.configs.recommended,
 ];
 
