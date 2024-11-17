@@ -23,7 +23,7 @@
         "*.{js,ts}": [
             "biome format --no-errors-on-unmatched --write",
             "prettier --config prettier.config.js --write",
-            "eslint --config .eslintrc.cjs --fix"
+            "eslint --config eslint.config.js --fix"
         ],
         "*.{css,gql,graphql,html,json,less,md,mdx,sass,scss}": [
             "prettier --config prettier.config.js --write"
@@ -39,8 +39,8 @@
         "test": "jest tests --verbose",
         "test:coverage": "jest tests --coverage",
         "fmt": "biome format --no-errors-on-unmatched --write . && prettier --config prettier.config.js --write .",
-        "lint": "eslint --config .eslintrc.cjs --ext ts,js src/",
-        "lint:fix": "biome lint --apply-unsafe src/ && eslint --config .eslintrc.cjs --ext ts,js --fix src/",
+        "lint": "eslint --config eslint.config.js --ext ts,js src/",
+        "lint:fix": "biome lint --apply-unsafe src/ && eslint --config eslint.config.js --ext ts,js --fix src/",
         "lint:staged": "lint-staged",
         "fix": "npm run fmt && npm run lint:fix",
         "build:api-docs": "typedoc --plugin typedoc-plugin-markdown --out docs/api src/index.ts",
@@ -54,29 +54,29 @@
         "version": "auto-changelog -p -o CHANGELOG.md --hide-credit --release-summary --hide-empty-releases --sort-commits date-desc && git add CHANGELOG.md"
     },
     "devDependencies": {
-        "@biomejs/biome": "1.8.3",
-        "@types/jest": "^29.5.11",
-        "@types/node": "^20.11.0",
-        "@typescript-eslint/eslint-plugin": "^7.0.0",
-        "@typescript-eslint/parser": "^7.1.0",
+        "@biomejs/biome": "^1.9.4",
+        "@types/jest": "^29.5.14",
+        "@types/node": "^22.9.0",
+        "@typescript-eslint/eslint-plugin": "^8.14.0",
+        "@typescript-eslint/parser": "^8.14.0",
         "auto-changelog": "^2.4.0",
         "dts-bundle-generator": "^9.2.4",
-        "esbuild": "^0.23.0",
-        "eslint": "^8.56.0",
-        "eslint-plugin-jest": "^27.6.3",
+        "esbuild": "^0.24.0",
+        "eslint": "^9.15.0",
+        "eslint-plugin-jest": "^28.9.0",
         "eslint-plugin-node": "^11.1.0",
         "husky": "^9.0.11",
         "jest": "^29.7.0",
         "lint-staged": "^15.2.0",
-        "madge": "^7.0.0",
+        "madge": "^8.0.0",
         "prettier": "^3.2.1",
         "ts-jest": "^29.1.1",
         "typedoc": "^0.26.2",
         "typedoc-plugin-markdown": "^3.17.1",
-        "typescript": "^5.3.3"
+        "typescript": "^5.6.3"
     },
     "bin": "bin/{{package.name}}",
     "engines": {
-        "node": ">=14.0.0"
+        "node": ">=18.0.0"
     }
 }
