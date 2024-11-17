@@ -18,10 +18,10 @@ jobs:
           bun-version: latest
 
       - name: Run Prettier
-        run: node_modules/.bin/prettier --config prettier.config.js *.js *.json *.yml ./src/* ./tests/*
+        run: bunx prettier --config prettier.config.js *.js *.json *.yml ./src/* ./tests/*
 
       - name: Run ESLint
-        run: node_modules/.bin/eslint --config eslint.config.js --fix --ext ts,js ./src/**/* ./tests/**/*
+        run: bunx eslint --config eslint.config.js --fix --ext ts,js ./src/**/* ./tests/**/*
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
