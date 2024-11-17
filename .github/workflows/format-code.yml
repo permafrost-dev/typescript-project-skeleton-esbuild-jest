@@ -17,6 +17,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install dependencies
+        run: bun install
+
       - name: Run Prettier
         run: bunx prettier --config prettier.config.js --write *.json ./src/* ./tests/*
 
