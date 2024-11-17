@@ -18,7 +18,7 @@ jobs:
           bun-version: latest
 
       - name: Run Prettier
-        run: bunx prettier --config prettier.config.js *.js *.json *.yml ./src/* ./tests/*
+        run: bunx prettier --config prettier.config.js *.json ./src/* ./tests/*
 
       - name: Run ESLint
         run: bunx eslint --config eslint.config.js --fix --ext ts,js ./src/**/* ./tests/**/*
