@@ -11,7 +11,6 @@ const config = [
     {
         files: [ 'src/*.js', 'src/**/*.js', 'src/**/*.ts', 'src/*.ts' ],
         ignores: [ 'node_modules', 'dist' ],
-        env: { node: true },
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'script',
